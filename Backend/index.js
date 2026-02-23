@@ -14,16 +14,6 @@ const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
 });
 
-// health check
-app.get("/health", async (_req, res) => {
-  try {
-    const r = await pool.query("SELECT 1 as ok");
-    res.json({ ok: true, db: r.rows[0].ok });
-  } catch (e) {
-    res.status(500).json({ ok: false, error: String(e) });
-  }
-});
-
 // GET list (table view)
 app.get("/api/servers", async (req, res) => {
   try {
@@ -161,4 +151,166 @@ app.get("/api/servers/:id", async (req, res) => {
     res.status(500).json({ error: String(e) });
   }
 });
+
+
+// UPDATE server
+app.put("/api/servers/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // whitelist fields you allow to update (match your DB columns)
+    const allowed = [
+      "server_name",
+      "ip_address",
+      "dns_name",
+      "power_state",
+      "create_date",
+      "location",
+      "zone_lv",
+      "application_name",
+      "system_environment",
+      "function",
+      "status",
+      "decommission_date",
+      "decom_duration_days",
+      "need_terminate_process",
+      "terminated_date",
+      "os",
+      "os_version",
+      "service_pack",
+      "cpu",
+      "memory",
+      "disk",
+      "update_patch_project",
+      "veritas_backup",
+      "test_dr",
+      "critical_app",
+      "pttep_server_owner",
+      "pttep_application_owner",
+      "application_support_department",
+      "application_support_name",
+      "application_support_email",
+      "server_focal_point",
+      "request_channel_for_pttep",
+      "ticket_id_request_for_ptt_digital",
+      "remark",
+    ];
+
+    const body = req.body ?? {};
+
+    const keys = Object.keys(body).filter((k) => allowed.includes(k));
+
+    if (keys.length === 0) {
+      return res.status(400).json({ error: "No valid fields to update" });
+    }
+
+    // build query: SET a=$1, b=$2 ...
+    const setParts = keys.map((k, idx) => `${k} = $${idx + 1}`);
+    const values = keys.map((k) => body[k]);
+
+    const sql = `
+      UPDATE server_inventory
+      SET ${setParts.join(", ")}
+      WHERE id = $${keys.length + 1}
+      RETURNING *
+    `;
+
+    const r = await pool.query(sql, [...values, id]);
+
+    if (r.rows.length === 0) return res.status(404).json({ error: "Not found" });
+
+    res.json(r.rows[0]);
+  } catch (e) {
+    res.status(500).json({ error: String(e) });
+  }
+});
+
+// DELETE server
+app.delete("/api/servers/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const r = await pool.query(
+      "DELETE FROM server_inventory WHERE id = $1 RETURNING id",
+      [id]
+    );
+
+    if (r.rows.length === 0) return res.status(404).json({ error: "Not found" });
+
+    res.json({ ok: true, id: r.rows[0].id });
+  } catch (e) {
+    res.status(500).json({ error: String(e) });
+  }
+});
+
+app.post("/api/servers", async (req, res) => {
+  try {
+    const body = req.body ?? {};
+
+    // ✅ Set only fields you allow
+    const allowed = [
+      "id",
+      "server_name",
+      "ip_address",
+      "dns_name",
+      "power_state",
+      "create_date",
+      "location",
+      "zone_lv",
+      "application_name",
+      "system_environment",
+      "function",
+      "status",
+      "decommission_date",
+      "decom_duration_days",
+      "need_terminate_process",
+      "terminated_date",
+      "os",
+      "os_version",
+      "service_pack",
+      "cpu",
+      "memory",
+      "disk",
+      "update_patch_project",
+      "veritas_backup",
+      "test_dr",
+      "critical_app",
+      "pttep_server_owner",
+      "pttep_application_owner",
+      "application_support_department",
+      "application_support_name",
+      "application_support_email",
+      "server_focal_point",
+      "request_channel_for_pttep",
+      "ticket_id_request_for_ptt_digital",
+      "remark",
+    ];
+
+    // Require minimal fields (adjust if you want)
+    if (!body.id || !body.server_name || !body.ip_address) {
+      return res.status(400).json({ error: "id, server_name, ip_address are required" });
+    }
+
+    const keys = Object.keys(body).filter((k) => allowed.includes(k));
+    const cols = keys.join(", ");
+    const placeholders = keys.map((_, i) => `$${i + 1}`).join(", ");
+    const values = keys.map((k) => body[k]);
+
+    const sql = `
+      INSERT INTO server_inventory (${cols})
+      VALUES (${placeholders})
+      RETURNING *
+    `;
+
+    const r = await pool.query(sql, values);
+    res.status(201).json(r.rows[0]);
+  } catch (e) {
+    // common: duplicate id
+    res.status(500).json({ error: String(e) });
+  }
+});
+
+
+
+
 

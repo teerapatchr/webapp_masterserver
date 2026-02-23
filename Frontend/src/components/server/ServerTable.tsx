@@ -31,13 +31,18 @@ export function ServerTable({
         () => [
             { key: "server_name", label: "Server Name", width: "200px" },
             { key: "ip_address", label: "IP Address", width: "170px" },
-            { key: "application_name", label: "Application Name", width: "220px" },
-            { key: "location", label: "Location", width: "120px" },
+
+            // 👇 make these expand
+            { key: "application_name", label: "Application Name", width: "2fr" },
+
+            { key: "location", label: "Location", width: "130px" },
             { key: "system_environment", label: "Environment", width: "140px" },
-            { key: "status", label: "Status", width: "170px" },
+            { key: "status", label: "Status", width: "160px" },
             { key: "power_state", label: "Power", width: "140px" },
-            { key: "critical_app", label: "Critical", width: "120px" },
-            { key: "pttep_server_owner", label: "Owner", width: "140px" },
+            { key: "critical_app", label: "Critical", width: "110px" },
+
+            // 👇 make Owner expand too (but less than Application)
+            { key: "pttep_server_owner", label: "Owner", width: "1.5fr" },
         ],
         []
     );

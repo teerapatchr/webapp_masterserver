@@ -1,4 +1,5 @@
 import type { ServerListQuery, ServerListResponse } from "@/lib/api-types";
+import type { ServerDetail } from "@/lib/types";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? "http://localhost:4000";
 
@@ -29,8 +30,6 @@ export async function fetchServers(query: ServerListQuery): Promise<ServerListRe
   return res.json();
 }
 
-import type { ServerDetail } from "@/lib/types";
-
 export async function fetchServerDetail(id: string): Promise<ServerDetail> {
   const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? "http://localhost:4000";
 
@@ -45,3 +44,36 @@ export async function fetchServerDetail(id: string): Promise<ServerDetail> {
   return res.json();
 }
 
+
+//Edit and Delete
+export async function updateServer(id: string, patch: Partial<ServerDetail>): Promise<ServerDetail> {
+  const res = await fetch(`${API_BASE}/api/servers/${id}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(patch),
+  });
+  if (!res.ok) throw new Error(`updateServer failed: ${res.status}`);
+  return res.json();
+}
+
+export async function deleteServer(id: string): Promise<{ ok: true; id: string }> {
+  const res = await fetch(`${API_BASE}/api/servers/${id}`, {
+    method: "DELETE",
+  });
+  if (!res.ok) throw new Error(`deleteServer failed: ${res.status}`);
+  return res.json();
+}
+
+//Add server 
+export async function createServer(payload: Partial<ServerDetail>): Promise<ServerDetail> {
+  const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? "http://localhost:4000";
+
+  const res = await fetch(`${API_BASE}/api/servers`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+
+  if (!res.ok) throw new Error(`createServer failed: ${res.status}`);
+  return res.json();
+}

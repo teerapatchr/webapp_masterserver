@@ -47,8 +47,10 @@ export function ServerFilters(props: Props) {
                         </SelectTrigger>
                         <SelectContent>
                             <SelectItem value="ALL">All Locations</SelectItem>
-                            <SelectItem value="BKK">BKK</SelectItem>
                             <SelectItem value="ART">ART</SelectItem>
+                            <SelectItem value="GBS">GBS</SelectItem>
+                            <SelectItem value="HQ">HQ</SelectItem>
+                            <SelectItem value="GBN">GBN</SelectItem>
                         </SelectContent>
                     </Select>
                 </div>
@@ -94,8 +96,8 @@ export function ServerFilters(props: Props) {
                         </SelectTrigger>
                         <SelectContent>
                             <SelectItem value="ALL">All States</SelectItem>
-                            <SelectItem value="On">On</SelectItem>
-                            <SelectItem value="Off">Off</SelectItem>
+                            <SelectItem value="Power On">On</SelectItem>
+                            <SelectItem value="Power Off">Off</SelectItem>
                         </SelectContent>
                     </Select>
                 </div>

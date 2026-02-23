@@ -9,10 +9,12 @@ import type { ServerDetail } from "@/lib/types";
 import { fetchServers } from "@/lib/server-api";
 import type { ServerInventory } from "@/lib/types";
 import { fetchServerDetail } from "@/lib/server-api";
+import { AddServerModal } from "@/components/server/AddServerModal";
 
 
 
 export default function DashboardPage() {
+    const [addOpen, setAddOpen] = useState(false);
     const [search, setSearch] = useState("");
     const [location, setLocation] = useState("ALL");
     const [env, setEnv] = useState("ALL");
@@ -51,8 +53,29 @@ export default function DashboardPage() {
         }
     };
 
+    const refetch = async () => {
+        setLoading(true);
+        try {
+            const res = await fetchServers({
+                q: search,
+                location,
+                env,
+                status,
+                power,
+                critical,
+                page,
+                limit,
+            });
+            setItems(res.items);
+            setMeta(res.meta);
+        } finally {
+            setLoading(false);
+        }
+    };
+
     useEffect(() => {
         setLoading(true);
+        refetch();
 
         fetchServers({
             q: search,
@@ -83,7 +106,7 @@ export default function DashboardPage() {
                 <h1 className="text-3xl font-semibold">Server Inventory</h1>
 
                 <div className="flex items-center gap-3">
-                    <Button>
+                    <Button onClick={() => setAddOpen(true)}>
                         <span className="mr-2">+</span>
                         Add Server
                     </Button>
@@ -140,11 +163,26 @@ export default function DashboardPage() {
                     </div>
                 </div>
 
+                <AddServerModal
+                    open={addOpen}
+                    onClose={() => setAddOpen(false)}
+                    onCreated={() => {
+                        refetch();
+                    }}
+                />
 
                 <ServerDetailsModal
                     open={open}
                     onClose={() => setOpen(false)}
                     server={selected}
+                    onUpdated={(updated) => {
+                        setSelected(updated);
+                        refetch();
+                    }}
+                    onDeleted={(id) => {
+                        setSelected(null);
+                        refetch();
+                    }}
                 />
 
             </div>
