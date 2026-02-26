@@ -249,7 +249,6 @@ app.post("/api/servers", async (req, res) => {
 
     // ✅ Set only fields you allow
     const allowed = [
-      "id",
       "server_name",
       "ip_address",
       "dns_name",
@@ -285,11 +284,6 @@ app.post("/api/servers", async (req, res) => {
       "ticket_id_request_for_ptt_digital",
       "remark",
     ];
-
-    // Require minimal fields (adjust if you want)
-    if (!body.id || !body.server_name || !body.ip_address) {
-      return res.status(400).json({ error: "id, server_name, ip_address are required" });
-    }
 
     const keys = Object.keys(body).filter((k) => allowed.includes(k));
     const cols = keys.join(", ");
