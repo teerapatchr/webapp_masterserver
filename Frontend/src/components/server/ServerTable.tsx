@@ -4,6 +4,7 @@ import { useMemo, useRef } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { Badge } from "@/components/ui/badge";
 import type { ServerInventory } from "@/lib/types";
+import type { VisibleFilters } from "@/components/server/ServerFilters";
 
 function PowerDot({ state }: { state: string }) {
     const isOn = state.toLowerCase() === "on";
@@ -21,31 +22,52 @@ function PowerDot({ state }: { state: string }) {
 export function ServerTable({
     data,
     onRowClick,
+    visibleFilters,
 }: {
     data: ServerInventory[];
     onRowClick: (id: string) => void;
+    visibleFilters: VisibleFilters;
 }) {
     const parentRef = useRef<HTMLDivElement>(null);
 
-    const columns = useMemo(
-        () => [
+    const columns = useMemo(() => {
+        const base = [
             { key: "server_name", label: "Server Name", width: "200px" },
             { key: "ip_address", label: "IP Address", width: "170px" },
 
-            // 👇 make these expand
+            // expand
             { key: "application_name", label: "Application Name", width: "2fr" },
+        ];
 
-            { key: "location", label: "Location", width: "130px" },
-            { key: "system_environment", label: "Environment", width: "140px" },
-            { key: "status", label: "Status", width: "160px" },
-            { key: "power_state", label: "Power", width: "140px" },
-            { key: "critical_app", label: "Critical", width: "110px" },
+        const optional = [
+            ...(visibleFilters.location
+                ? [{ key: "location", label: "Location", width: "130px" }]
+                : []),
 
-            // 👇 make Owner expand too (but less than Application)
+            ...(visibleFilters.env
+                ? [{ key: "system_environment", label: "Environment", width: "140px" }]
+                : []),
+
+            ...(visibleFilters.status
+                ? [{ key: "status", label: "Status", width: "160px" }]
+                : []),
+
+            ...(visibleFilters.power
+                ? [{ key: "power_state", label: "Power", width: "140px" }]
+                : []),
+
+            ...(visibleFilters.critical
+                ? [{ key: "critical_app", label: "Critical", width: "110px" }]
+                : []),
+        ];
+
+        const tail = [
+            // expand but less than app
             { key: "pttep_server_owner", label: "Owner", width: "1.5fr" },
-        ],
-        []
-    );
+        ];
+
+        return [...base, ...optional, ...tail];
+    }, [visibleFilters]);
 
     const gridTemplateColumns = useMemo(
         () => columns.map((c) => c.width).join(" "),
@@ -101,31 +123,39 @@ export function ServerTable({
                                 <div className="px-4 py-3 font-mono text-sm whitespace-nowrap overflow-hidden text-ellipsis">{s.ip_address}</div>
                                 <div className="px-4 py-3 whitespace-nowrap overflow-hidden text-ellipsis">{s.application_name}</div>
 
-                                <div className="px-4 py-3">
-                                    <Badge variant="outline">{s.location}</Badge>
-                                </div>
+                                {visibleFilters.location && (
+                                    <div className="px-4 py-3">
+                                        <Badge variant="outline">{s.location}</Badge>
+                                    </div>
+                                )}
 
-                                <div className="px-4 py-3">
-                                    <Badge variant="outline">{s.system_environment}</Badge>
-                                </div>
+                                {visibleFilters.env && (
+                                    <div className="px-4 py-3">
+                                        <Badge variant="outline">{s.system_environment}</Badge>
+                                    </div>
+                                )}
 
-                                <div className="px-4 py-3">
-                                    <Badge variant="outline">{s.status}</Badge>
-                                </div>
+                                {visibleFilters.status && (
+                                    <div className="px-4 py-3">
+                                        <Badge variant="outline">{s.status}</Badge>
+                                    </div>
+                                )}
 
-                                <div className="px-4 py-3">
-                                    <PowerDot state={s.power_state} />
-                                </div>
+                                {visibleFilters.power && (
+                                    <div className="px-4 py-3">
+                                        <PowerDot state={s.power_state} />
+                                    </div>
+                                )}
 
-                                <div className="px-4 py-3">
-                                    {s.critical_app === "Yes" ? (
-                                        <Badge className="bg-red-100 text-red-700 hover:bg-red-100">
-                                            Yes
-                                        </Badge>
-                                    ) : (
-                                        <span className="text-sm text-muted-foreground">No</span>
-                                    )}
-                                </div>
+                                {visibleFilters.critical && (
+                                    <div className="px-4 py-3">
+                                        {s.critical_app === "Yes" ? (
+                                            <Badge className="bg-red-100 text-red-700 hover:bg-red-100">Yes</Badge>
+                                        ) : (
+                                            <span className="text-sm text-muted-foreground">No</span>
+                                        )}
+                                    </div>
+                                )}
 
                                 <div
                                     className="px-4 py-3 whitespace-nowrap overflow-hidden text-ellipsis"

@@ -7,11 +7,11 @@ export async function fetchServers(query: ServerListQuery): Promise<ServerListRe
   const params = new URLSearchParams();
 
   if (query.q) params.set("q", query.q);
-  if (query.location) params.set("location", query.location);
-  if (query.env) params.set("env", query.env);
-  if (query.status) params.set("status", query.status);
-  if (query.power) params.set("power", query.power);
-  if (query.critical) params.set("critical", query.critical);
+  if (query.location && query.location !== "ALL") params.set("location", query.location);
+if (query.env && query.env !== "ALL") params.set("env", query.env);
+if (query.status && query.status !== "ALL") params.set("status", query.status);
+if (query.power && query.power !== "ALL") params.set("power", query.power);
+if (query.critical && query.critical !== "ALL") params.set("critical", query.critical);
 
   params.set("page", String(query.page ?? 1));
   params.set("limit", String(query.limit ?? 50));
@@ -24,8 +24,12 @@ export async function fetchServers(query: ServerListQuery): Promise<ServerListRe
   });
 
   if (!res.ok) {
-    throw new Error(`fetchServers failed: ${res.status}`);
-  }
+  let details = "";
+  try {
+    details = await res.text(); // backend sends { error: "..." }
+  } catch {}
+  throw new Error(`fetchServers failed: ${res.status} ${details}`);
+}
 
   return res.json();
 }

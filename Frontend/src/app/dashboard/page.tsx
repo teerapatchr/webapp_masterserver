@@ -3,7 +3,11 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ServerTable } from "@/components/server/ServerTable";
-import { ServerFilters } from "@/components/server/ServerFilters";
+import {
+    ServerFilters,
+    DEFAULT_VISIBLE_FILTERS,
+    type VisibleFilters,
+} from "@/components/server/ServerFilters";
 import { ServerDetailsModal } from "@/components/server/ServerDetailsModal";
 import type { ServerDetail } from "@/lib/types";
 import { fetchServers } from "@/lib/server-api";
@@ -73,27 +77,39 @@ export default function DashboardPage() {
         }
     };
 
-    useEffect(() => {
-        setLoading(true);
-        refetch();
+    const [visibleFilters, setVisibleFilters] = useState<VisibleFilters>(
+        DEFAULT_VISIBLE_FILTERS
+    );
 
-        fetchServers({
-            q: search,
-            location,
-            env,
-            status,
-            power,
-            critical,
-            page,
-            limit,
-        })
-            .then((res) => {
-                setItems(res.items);
-                setTotalItems(res.meta.totalItems);
-                setMeta(res.meta);
-            })
-            .finally(() => setLoading(false));
+    useEffect(() => {
+        refetch();
     }, [search, location, env, status, power, critical, page, limit]);
+
+    useEffect(() => {
+        try {
+            const raw = localStorage.getItem("msis.visibleFilters");
+            if (!raw) return;
+            setVisibleFilters({ ...DEFAULT_VISIBLE_FILTERS, ...JSON.parse(raw) });
+        } catch { }
+    }, []);
+
+    useEffect(() => {
+        try {
+            localStorage.setItem("msis.visibleFilters", JSON.stringify(visibleFilters));
+        } catch { }
+    }, [visibleFilters]);
+
+    const handleVisibleFiltersChange = (next: VisibleFilters) => {
+        // Option B: when hidden => reset to ALL (no filtering)
+        if (!next.location) setLocation("ALL");
+        if (!next.env) setEnv("ALL");
+        if (!next.status) setStatus("ALL");
+        if (!next.power) setPower("ALL");
+        if (!next.critical) setCritical("ALL");
+
+        setVisibleFilters(next);
+        setPage(1);
+    };
 
 
 
@@ -128,6 +144,8 @@ export default function DashboardPage() {
                 onPowerChange={setPower}
                 critical={critical}
                 onCriticalChange={setCritical}
+                visibleFilters={visibleFilters}
+                onVisibleFiltersChange={handleVisibleFiltersChange}
             />
 
             {/* Count + Table */}
@@ -135,7 +153,7 @@ export default function DashboardPage() {
                 <div className="text-sm text-muted-foreground">
                     {loading ? "Loading..." : `Showing ${items.length} of ${totalItems} servers`}
                 </div>
-                <ServerTable data={items} onRowClick={handleRowClick} />
+                <ServerTable data={items} onRowClick={handleRowClick} visibleFilters={visibleFilters} />
 
                 <div className="flex items-center justify-between pt-4">
                     <div className="text-sm text-muted-foreground">
