@@ -183,6 +183,9 @@ export default function DashboardPage() {
                         <span className="mr-2">+</span>
                         Add Server
                     </Button>
+                    <Button variant="outline" onClick={() => setColumnPickerOpen(true)}>
+                        Columns
+                    </Button>
                     <div className="h-10 w-10 rounded-full bg-muted" />
                 </div>
             </div>
