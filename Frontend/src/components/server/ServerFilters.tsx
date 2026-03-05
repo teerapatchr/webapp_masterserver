@@ -79,6 +79,7 @@ export function ServerFilters(props: Props) {
                 <Button type="button" variant="outline" onClick={() => setCustomizeOpen(true)}>
                     Customize Filters
                 </Button>
+
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-5 gap-4">

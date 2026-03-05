@@ -14,6 +14,14 @@ import { fetchServers } from "@/lib/server-api";
 import type { ServerInventory } from "@/lib/types";
 import { fetchServerDetail } from "@/lib/server-api";
 import { AddServerModal } from "@/components/server/AddServerModal";
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog";
 
 
 
@@ -57,6 +65,18 @@ export default function DashboardPage() {
         }
     };
 
+    const DEFAULT_VISIBLE_COLUMNS: ColumnKey[] = [
+        "server_name",
+        "ip_address",
+        "application_name",
+        "location",
+        "system_environment",
+        "status",
+        "power_state",
+        "critical_app",
+        "pttep_server_owner",
+    ];
+
     const refetch = async () => {
         setLoading(true);
         try {
@@ -80,6 +100,27 @@ export default function DashboardPage() {
     const [visibleFilters, setVisibleFilters] = useState<VisibleFilters>(
         DEFAULT_VISIBLE_FILTERS
     );
+
+    const [visibleColumns, setVisibleColumns] = useState<ColumnKey[]>(
+        DEFAULT_VISIBLE_COLUMNS
+    );
+
+    const [columnPickerOpen, setColumnPickerOpen] = useState(false);
+
+    useEffect(() => {
+        try {
+            const raw = localStorage.getItem("msis.visibleColumns");
+            if (!raw) return;
+            const parsed = JSON.parse(raw) as ColumnKey[];
+            if (Array.isArray(parsed) && parsed.length > 0) setVisibleColumns(parsed);
+        } catch { }
+    }, []);
+
+    useEffect(() => {
+        try {
+            localStorage.setItem("msis.visibleColumns", JSON.stringify(visibleColumns));
+        } catch { }
+    }, [visibleColumns]);
 
     useEffect(() => {
         refetch();
@@ -111,9 +152,25 @@ export default function DashboardPage() {
         setPage(1);
     };
 
+    type ColumnKey =
+        | "server_name"
+        | "ip_address"
+        | "application_name"
+        | "location"
+        | "system_environment"
+        | "status"
+        | "power_state"
+        | "critical_app"
+        | "pttep_server_owner";
 
+    const [dragKey, setDragKey] = useState<ColumnKey | null>(null);
 
-
+    const moveItem = (arr: ColumnKey[], from: number, to: number) => {
+        const copy = [...arr];
+        const [item] = copy.splice(from, 1);
+        copy.splice(to, 0, item);
+        return copy;
+    };
 
     return (
         <div className="p-8 space-y-6">
@@ -153,7 +210,7 @@ export default function DashboardPage() {
                 <div className="text-sm text-muted-foreground">
                     {loading ? "Loading..." : `Showing ${items.length} of ${totalItems} servers`}
                 </div>
-                <ServerTable data={items} onRowClick={handleRowClick} visibleFilters={visibleFilters} />
+                <ServerTable data={items} onRowClick={handleRowClick} visibleFilters={visibleFilters} visibleColumns={visibleColumns} />
 
                 <div className="flex items-center justify-between pt-4">
                     <div className="text-sm text-muted-foreground">
@@ -202,6 +259,105 @@ export default function DashboardPage() {
                         refetch();
                     }}
                 />
+
+                <Dialog open={columnPickerOpen} onOpenChange={setColumnPickerOpen}>
+                    <DialogContent className="sm:max-w-lg">
+                        <DialogHeader>
+                            <DialogTitle>Choose Columns</DialogTitle>
+                            <DialogDescription>
+                                Toggle which columns appear in the table.
+                            </DialogDescription>
+                        </DialogHeader>
+
+                        <div className="space-y-3">
+                            {visibleColumns.map((key, index) => {
+                                const locked = key === "server_name" || key === "ip_address";
+                                const checked = visibleColumns.includes(key);
+
+                                const labelMap: Record<ColumnKey, string> = {
+                                    server_name: "Server Name",
+                                    ip_address: "IP Address",
+                                    application_name: "Application Name",
+                                    location: "Location",
+                                    system_environment: "Environment",
+                                    status: "Status",
+                                    power_state: "Power",
+                                    critical_app: "Critical",
+                                    pttep_server_owner: "Owner",
+                                };
+
+                                return (
+                                    <div
+                                        key={key}
+                                        className="flex items-center justify-between rounded-lg border px-3 py-2"
+                                        draggable={!locked}
+                                        onDragStart={() => setDragKey(key)}
+                                        onDragEnd={() => setDragKey(null)}
+                                        onDragOver={(e) => {
+                                            // allow dropping
+                                            e.preventDefault();
+                                        }}
+                                        onDrop={() => {
+                                            if (!dragKey) return;
+                                            if (dragKey === key) return;
+
+                                            // do not allow dropping above locked columns
+                                            const lockedCount = 2; // server_name + ip_address
+                                            const from = visibleColumns.indexOf(dragKey);
+                                            const to = index;
+
+                                            // prevent moving locked items (just in case)
+                                            if (dragKey === "server_name" || dragKey === "ip_address") return;
+
+                                            // prevent placing anything before the locked block
+                                            const safeTo = Math.max(lockedCount, to);
+
+                                            setVisibleColumns((prev) => moveItem(prev, from, safeTo));
+                                        }}
+                                    >
+                                        <div className="flex items-center gap-3">
+                                            {/* Drag handle */}
+                                            <div
+                                                className={`text-muted-foreground select-none ${locked ? "opacity-40 cursor-not-allowed" : "cursor-grab"
+                                                    }`}
+                                                title={locked ? "Locked column" : "Drag to reorder"}
+                                            >
+                                                ≡
+                                            </div>
+
+                                            <div className="text-sm font-medium">{labelMap[key]}</div>
+                                        </div>
+
+                                        <input
+                                            type="checkbox"
+                                            className="h-4 w-4"
+                                            checked={checked}
+                                            disabled={locked}
+                                            onChange={(e) => {
+                                                const nextChecked = e.target.checked;
+
+                                                setVisibleColumns((prev) => {
+                                                    if (nextChecked) return Array.from(new Set([...prev, key]));
+                                                    return prev.filter((k) => k !== key);
+                                                });
+                                            }}
+                                        />
+                                    </div>
+                                );
+                            })}
+                        </div>
+
+                        <DialogFooter className="gap-2 sm:gap-0">
+                            <Button
+                                variant="outline"
+                                onClick={() => setVisibleColumns(DEFAULT_VISIBLE_COLUMNS)}
+                            >
+                                Reset
+                            </Button>
+                            <Button onClick={() => setColumnPickerOpen(false)}>Done</Button>
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
 
             </div>
         </div>

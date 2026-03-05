@@ -7,6 +7,7 @@ import type { ServerInventory } from "@/lib/types";
 import type { VisibleFilters } from "@/components/server/ServerFilters";
 
 function PowerDot({ state }: { state: string }) {
+    const s = (state ?? "").toLowerCase();
     const isOn = state.toLowerCase() === "on";
     return (
         <div className="flex items-center gap-2">
@@ -18,15 +19,27 @@ function PowerDot({ state }: { state: string }) {
         </div>
     );
 }
+export type ColumnKey =
+    | "server_name"
+    | "ip_address"
+    | "application_name"
+    | "location"
+    | "system_environment"
+    | "status"
+    | "power_state"
+    | "critical_app"
+    | "pttep_server_owner";
 
 export function ServerTable({
     data,
     onRowClick,
     visibleFilters,
+    visibleColumns,
 }: {
     data: ServerInventory[];
     onRowClick: (id: string) => void;
     visibleFilters: VisibleFilters;
+    visibleColumns: ColumnKey[];
 }) {
     const parentRef = useRef<HTMLDivElement>(null);
 
@@ -66,8 +79,16 @@ export function ServerTable({
             { key: "pttep_server_owner", label: "Owner", width: "1.5fr" },
         ];
 
-        return [...base, ...optional, ...tail];
-    }, [visibleFilters]);
+        const all = [...base, ...optional, ...tail];
+
+        // keep ONLY the visible columns
+        const visible = all.filter((c) => visibleColumns.includes(c.key as ColumnKey));
+
+        // reorder to match visibleColumns order
+        const byKey = new Map(visible.map((c) => [c.key as ColumnKey, c]));
+        return visibleColumns.map((k) => byKey.get(k)).filter(Boolean) as typeof visible;
+    }, [visibleFilters, visibleColumns]);
+
 
     const gridTemplateColumns = useMemo(
         () => columns.map((c) => c.width).join(" "),
@@ -119,50 +140,101 @@ export function ServerTable({
                                     height: 56,
                                 }}
                             >
-                                <div className="px-4 py-3 font-medium whitespace-nowrap overflow-hidden text-ellipsis">{s.server_name}</div>
-                                <div className="px-4 py-3 font-mono text-sm whitespace-nowrap overflow-hidden text-ellipsis">{s.ip_address}</div>
-                                <div className="px-4 py-3 whitespace-nowrap overflow-hidden text-ellipsis">{s.application_name}</div>
+                                {columns.map((c) => {
+                                    switch (c.key) {
+                                        case "server_name":
+                                            return (
+                                                <div
+                                                    key={c.key}
+                                                    className="px-4 py-3 font-medium whitespace-nowrap overflow-hidden text-ellipsis"
+                                                    title={s.server_name}
+                                                >
+                                                    {s.server_name}
+                                                </div>
+                                            );
 
-                                {visibleFilters.location && (
-                                    <div className="px-4 py-3">
-                                        <Badge variant="outline">{s.location}</Badge>
-                                    </div>
-                                )}
+                                        case "ip_address":
+                                            return (
+                                                <div
+                                                    key={c.key}
+                                                    className="px-4 py-3 font-mono text-sm whitespace-nowrap overflow-hidden text-ellipsis"
+                                                    title={s.ip_address}
+                                                >
+                                                    {s.ip_address}
+                                                </div>
+                                            );
 
-                                {visibleFilters.env && (
-                                    <div className="px-4 py-3">
-                                        <Badge variant="outline">{s.system_environment}</Badge>
-                                    </div>
-                                )}
+                                        case "application_name":
+                                            return (
+                                                <div
+                                                    key={c.key}
+                                                    className="px-4 py-3 whitespace-nowrap overflow-hidden text-ellipsis"
+                                                    title={s.application_name}
+                                                >
+                                                    {s.application_name}
+                                                </div>
+                                            );
 
-                                {visibleFilters.status && (
-                                    <div className="px-4 py-3">
-                                        <Badge variant="outline">{s.status}</Badge>
-                                    </div>
-                                )}
+                                        case "location":
+                                            return (
+                                                <div key={c.key} className="px-4 py-3">
+                                                    <Badge variant="outline">{s.location}</Badge>
+                                                </div>
+                                            );
 
-                                {visibleFilters.power && (
-                                    <div className="px-4 py-3">
-                                        <PowerDot state={s.power_state} />
-                                    </div>
-                                )}
+                                        case "system_environment":
+                                            return (
+                                                <div key={c.key} className="px-4 py-3">
+                                                    <Badge variant="outline">{s.system_environment}</Badge>
+                                                </div>
+                                            );
 
-                                {visibleFilters.critical && (
-                                    <div className="px-4 py-3">
-                                        {s.critical_app === "Yes" ? (
-                                            <Badge className="bg-red-100 text-red-700 hover:bg-red-100">Yes</Badge>
-                                        ) : (
-                                            <span className="text-sm text-muted-foreground">No</span>
-                                        )}
-                                    </div>
-                                )}
+                                        case "status":
+                                            return (
+                                                <div key={c.key} className="px-4 py-3">
+                                                    <Badge variant="outline">{s.status}</Badge>
+                                                </div>
+                                            );
 
-                                <div
-                                    className="px-4 py-3 whitespace-nowrap overflow-hidden text-ellipsis"
-                                    title={s.pttep_server_owner}
-                                >
-                                    {s.pttep_server_owner}
-                                </div>
+                                        case "power_state":
+                                            return (
+                                                <div key={c.key} className="px-4 py-3">
+                                                    <PowerDot state={s.power_state} />
+                                                </div>
+                                            );
+
+                                        case "critical_app":
+                                            return (
+                                                <div key={c.key} className="px-4 py-3">
+                                                    {s.critical_app === "Yes" ? (
+                                                        <Badge className="bg-red-100 text-red-700 hover:bg-red-100">
+                                                            Yes
+                                                        </Badge>
+                                                    ) : (
+                                                        <span className="text-sm text-muted-foreground">No</span>
+                                                    )}
+                                                </div>
+                                            );
+
+                                        case "pttep_server_owner":
+                                            return (
+                                                <div
+                                                    key={c.key}
+                                                    className="px-4 py-3 whitespace-nowrap overflow-hidden text-ellipsis"
+                                                    title={s.pttep_server_owner}
+                                                >
+                                                    {s.pttep_server_owner}
+                                                </div>
+                                            );
+
+                                        default:
+                                            return (
+                                                <div key={c.key} className="px-4 py-3 text-sm text-muted-foreground">
+                                                    -
+                                                </div>
+                                            );
+                                    }
+                                })}
                             </div>
                         );
                     })}
