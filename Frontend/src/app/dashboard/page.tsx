@@ -10,6 +10,7 @@ import {
 } from "@/components/server/ServerFilters";
 import { ServerDetailsModal } from "@/components/server/ServerDetailsModal";
 import type { ServerDetail } from "@/lib/types";
+import { ExportCsvModal } from "@/components/server/ExportCsvModal";
 import { fetchServers } from "@/lib/server-api";
 import type { ServerInventory } from "@/lib/types";
 import { fetchServerDetail } from "@/lib/server-api";
@@ -38,6 +39,7 @@ export default function DashboardPage() {
     const [items, setItems] = useState<ServerInventory[]>([]);
     const [totalItems, setTotalItems] = useState(0);
     const [loading, setLoading] = useState(false);
+    const [exportOpen, setExportOpen] = useState(false);
 
     const [page, setPage] = useState(1);
     console.log("page =", page);
@@ -186,9 +188,25 @@ export default function DashboardPage() {
                     <Button variant="outline" onClick={() => setColumnPickerOpen(true)}>
                         Columns
                     </Button>
+                    <Button variant="outline" onClick={() => setExportOpen(true)}>
+                        Export CSV
+                    </Button>
                     <div className="h-10 w-10 rounded-full bg-muted" />
                 </div>
             </div>
+
+            <ExportCsvModal
+                open={exportOpen}
+                onClose={() => setExportOpen(false)}
+                filters={{
+                    q: search,
+                    location,
+                    env,
+                    status,
+                    power,
+                    critical,
+                }}
+            />
 
             {/* Filters */}
             <ServerFilters
@@ -361,6 +379,8 @@ export default function DashboardPage() {
                         </DialogFooter>
                     </DialogContent>
                 </Dialog>
+
+
 
             </div>
         </div>

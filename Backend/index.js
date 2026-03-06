@@ -14,6 +14,152 @@ const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
 });
 
+// Define export columns and their groups
+const EXPORT_COLUMNS = [
+  { key: "id", label: "ID", group: "Identity" },
+  { key: "server_name", label: "Server Name", group: "Identity" },
+  { key: "ip_address", label: "IP Address", group: "Identity" },
+  { key: "dns_name", label: "DNS Name", group: "Identity" },
+  { key: "location", label: "Location", group: "Identity" },
+  { key: "zone_lv", label: "Zone Level", group: "Identity" },
+
+  { key: "application_name", label: "Application Name", group: "Application" },
+  { key: "pttep_server_owner", label: "Server Owner", group: "Application" },
+  { key: "pttep_application_owner", label: "Application Owner", group: "Application" },
+
+  { key: "system_environment", label: "Environment", group: "Environment" },
+  { key: "function", label: "Function", group: "Environment" },
+  { key: "status", label: "Status", group: "Environment" },
+  { key: "power_state", label: "Power State", group: "Environment" },
+  { key: "critical_app", label: "Critical App", group: "Environment" },
+
+  { key: "create_date", label: "Create Date", group: "Lifecycle" },
+  { key: "decommission_date", label: "Decommission Date", group: "Lifecycle" },
+  { key: "decom_duration_days", label: "Decom Duration Days", group: "Lifecycle" },
+  { key: "need_terminate_process", label: "Need Terminate Process", group: "Lifecycle" },
+  { key: "terminated_date", label: "Terminated Date", group: "Lifecycle" },
+
+  { key: "os", label: "OS", group: "System" },
+  { key: "os_version", label: "OS Version", group: "System" },
+  { key: "os_service_pack", label: "OS Service Pack", group: "System" },
+  { key: "cpu", label: "CPU", group: "System" },
+  { key: "memory", label: "Memory", group: "System" },
+  { key: "disk", label: "Disk", group: "System" },
+
+  { key: "update_patch_project", label: "Patch Project", group: "Operations" },
+  { key: "veritas_backup", label: "Veritas Backup", group: "Operations" },
+  { key: "test_dr", label: "Test DR", group: "Operations" },
+
+  { key: "application_support_department", label: "Support Department", group: "Support" },
+  { key: "application_support_name", label: "Support Name", group: "Support" },
+  { key: "application_support_email", label: "Support Email", group: "Support" },
+  { key: "server_focal_point", label: "Server Focal Point", group: "Support" },
+  { key: "request_channel_for_pttep", label: "Request Channel", group: "Support" },
+  { key: "ticket_id_request_for_ptt_digital", label: "Ticket ID", group: "Support" },
+
+  { key: "remark", label: "Remark", group: "Notes" },
+];
+
+const EXPORT_COL_SET = new Set(EXPORT_COLUMNS.map((c) => c.key));
+
+const csvEscape = (v) => {
+  if (v === null || v === undefined) return "";
+  const s = String(v);
+  // escape quotes and wrap if needed
+  if (/[",\n\r]/.test(s)) return `"${s.replace(/"/g, '""')}"`;
+  return s;
+};
+
+//Export Route
+app.get("/api/servers/export", async (req, res) => {
+  try {
+    const {
+      q,
+      location,
+      env,
+      status,
+      power,
+      critical,
+      columns, // comma-separated keys
+    } = req.query;
+
+    // ---- 1) parse selected columns ----
+    const requested = String(columns || "")
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean);
+
+    // default export if none provided
+    const cols = (requested.length
+      ? requested
+      : ["server_name", "ip_address", "application_name", "location", "system_environment", "status"]
+    ).filter((c) => EXPORT_COL_SET.has(c));
+
+    if (cols.length === 0) {
+      return res.status(400).json({ error: "No valid columns selected" });
+    }
+
+    // ---- 2) build SAME filters as your list endpoint ----
+    const params = [];
+    let i = 1;
+    let where = "WHERE 1=1";
+
+    if (q && String(q).trim() !== "") {
+      params.push(String(q).trim());
+      where += ` AND (
+        server_name ILIKE '%' || $${i} || '%'
+        OR ip_address ILIKE '%' || $${i} || '%'
+        OR application_name ILIKE '%' || $${i} || '%'
+      )`;
+      i++;
+    }
+
+    const addEq = (field, value) => {
+      if (value && String(value) !== "ALL") {
+        params.push(String(value));
+        where += ` AND ${field} = $${i}`;
+        i++;
+      }
+    };
+
+    addEq("location", location);
+    addEq("system_environment", env);
+    addEq("status", status);
+    addEq("power_state", power);
+    addEq("critical_app", critical);
+
+    // ---- 3) query all matching rows (NO pagination) ----
+    // safe SELECT list: only from EXPORT_COLUMNS keys
+    const selectCols = cols.map((c) => `"${c}"`).join(", ");
+
+    const sql = `
+      SELECT ${selectCols}
+      FROM server_inventory
+      ${where}
+      ORDER BY server_name ASC
+    `;
+
+    const r = await pool.query(sql, params);
+
+    // ---- 4) return CSV download ----
+    res.setHeader("Content-Type", "text/csv; charset=utf-8");
+    res.setHeader("Content-Disposition", `attachment; filename="servers_export.csv"`);
+
+    // header
+    res.write(cols.join(",") + "\n");
+
+    // rows
+    for (const row of r.rows) {
+      const line = cols.map((c) => csvEscape(row[c])).join(",");
+      res.write(line + "\n");
+    }
+
+    res.end();
+  } catch (e) {
+    res.status(500).json({ error: String(e) });
+  }
+});
+
 // GET list (table view)
 app.get("/api/servers", async (req, res) => {
   try {
@@ -128,29 +274,6 @@ app.listen(process.env.PORT || 4000, () => {
   console.log(`API running on http://localhost:${process.env.PORT || 4000}`);
 });
 
-// GET detail (modal)
-app.get("/api/servers/:id", async (req, res) => {
-  try {
-    const { id } = req.params;
-
-    const sql = `
-      SELECT *
-      FROM server_inventory
-      WHERE id = $1
-      LIMIT 1
-    `;
-
-    const r = await pool.query(sql, [id]);
-
-    if (r.rows.length === 0) {
-      return res.status(404).json({ error: "Not found" });
-    }
-
-    return res.json(r.rows[0]);
-  } catch (e) {
-    res.status(500).json({ error: String(e) });
-  }
-});
 
 
 // UPDATE server
@@ -243,11 +366,10 @@ app.delete("/api/servers/:id", async (req, res) => {
   }
 });
 
+// CREATE server
 app.post("/api/servers", async (req, res) => {
   try {
     const body = req.body ?? {};
-
-    // ✅ Set only fields you allow
     const allowed = [
       "server_name",
       "ip_address",
@@ -304,7 +426,31 @@ app.post("/api/servers", async (req, res) => {
   }
 });
 
+//Api for CSV export 
+app.get("/api/servers/export-columns", (req, res) => {
+  res.json(EXPORT_COLUMNS);
+});
 
+// GET detail (modal)
+app.get("/api/servers/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
 
+    const sql = `
+      SELECT *
+      FROM server_inventory
+      WHERE id = $1
+      LIMIT 1
+    `;
 
+    const r = await pool.query(sql, [id]);
 
+    if (r.rows.length === 0) {
+      return res.status(404).json({ error: "Not found" });
+    }
+
+    return res.json(r.rows[0]);
+  } catch (e) {
+    res.status(500).json({ error: String(e) });
+  }
+});
