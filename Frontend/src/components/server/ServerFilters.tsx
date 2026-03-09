@@ -25,7 +25,10 @@ export type FilterKey =
     | "status"
     | "power"
     | "critical"
-    | "createDate";
+    | "createDate"
+    | "decommissionDate"
+    | "terminatedDate"
+    ;
 export type VisibleFilters = Record<FilterKey, boolean>;
 
 export const DEFAULT_VISIBLE_FILTERS: VisibleFilters = {
@@ -34,7 +37,9 @@ export const DEFAULT_VISIBLE_FILTERS: VisibleFilters = {
     status: true,
     power: true,
     critical: false,
-    createDate: true,
+    createDate: false,
+    decommissionDate: false,
+    terminatedDate: false,
 };
 
 const FILTER_LABELS: Record<FilterKey, string> = {
@@ -44,6 +49,8 @@ const FILTER_LABELS: Record<FilterKey, string> = {
     power: "Power State",
     critical: "Critical App",
     createDate: "Create Date",
+    decommissionDate: "Decommission Date",
+    terminatedDate: "Terminated Date",
 };
 
 type Props = {
@@ -76,6 +83,18 @@ type Props = {
 
     onCreateDateFromChange: (v: string) => void;
     onCreateDateToChange: (v: string) => void;
+
+    decommissionDateFrom: string;
+    decommissionDateTo: string;
+
+    onDecommissionDateFromChange: (v: string) => void;
+    onDecommissionDateToChange: (v: string) => void;
+
+    terminatedDateFrom: string;
+    terminatedDateTo: string;
+
+    onTerminatedDateFromChange: (v: string) => void;
+    onTerminatedDateToChange: (v: string) => void;
 
 };
 
@@ -205,6 +224,46 @@ export function ServerFilters(props: Props) {
                                 type="date"
                                 value={props.createDateTo}
                                 onChange={(e) => props.onCreateDateToChange(e.target.value)}
+                            />
+                        </div>
+                    </div>
+                )}
+
+                {props.visibleFilters.decommissionDate && (
+                    <div className="space-y-2">
+                        <div className="text-sm font-medium">Decommission Date</div>
+
+                        <div className="flex gap-2">
+                            <Input
+                                type="date"
+                                value={props.decommissionDateFrom}
+                                onChange={(e) => props.onDecommissionDateFromChange(e.target.value)}
+                            />
+
+                            <Input
+                                type="date"
+                                value={props.decommissionDateTo}
+                                onChange={(e) => props.onDecommissionDateToChange(e.target.value)}
+                            />
+                        </div>
+                    </div>
+                )}
+
+                {props.visibleFilters.terminatedDate && (
+                    <div className="space-y-2">
+                        <div className="text-sm font-medium">Terminated Date</div>
+
+                        <div className="flex gap-2">
+                            <Input
+                                type="date"
+                                value={props.terminatedDateFrom}
+                                onChange={(e) => props.onTerminatedDateFromChange(e.target.value)}
+                            />
+
+                            <Input
+                                type="date"
+                                value={props.terminatedDateTo}
+                                onChange={(e) => props.onTerminatedDateToChange(e.target.value)}
                             />
                         </div>
                     </div>

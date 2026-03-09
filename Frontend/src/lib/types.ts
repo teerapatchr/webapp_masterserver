@@ -28,7 +28,7 @@ export type ServerDetail = {
   status: string;
 
   decommission_date: string;
-  decom_duration_days: string;
+  decom_duration_days?: number | null;
   need_terminate_process: string;
   terminated_date: string;
 
@@ -56,6 +56,8 @@ export type ServerDetail = {
   ticket_id_request_for_ptt_digital: string;
 
   remark: string;
+
+
 };
 
 

@@ -23,6 +23,10 @@ type Props = {
         serverOwner?: string;
         createDateFrom?: string;
         createDateTo?: string;
+        decommissionDateFrom?: string;
+        decommissionDateTo?: string;
+        terminatedDateFrom?: string;
+        terminatedDateTo?: string;
     };
 };
 
@@ -119,6 +123,10 @@ export function ExportCsvModal({ open, onClose, filters }: Props) {
             serverOwner: filters.serverOwner ?? "ALL",
             createDateFrom: filters.createDateFrom ?? "",
             createDateTo: filters.createDateTo ?? "",
+            decommissionDateFrom: filters.decommissionDateFrom ?? "",
+            decommissionDateTo: filters.decommissionDateTo ?? "",
+            terminatedDateFrom: filters.terminatedDateFrom ?? "",
+            terminatedDateTo: filters.terminatedDateTo ?? "",
             columns,
         });
 

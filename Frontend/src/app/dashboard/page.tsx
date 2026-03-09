@@ -43,6 +43,10 @@ export default function DashboardPage() {
     const [exportOpen, setExportOpen] = useState(false);
     const [createDateFrom, setCreateDateFrom] = useState("");
     const [createDateTo, setCreateDateTo] = useState("");
+    const [decommissionDateFrom, setDecommissionDateFrom] = useState("");
+    const [decommissionDateTo, setDecommissionDateTo] = useState("");
+    const [terminatedDateFrom, setTerminatedDateFrom] = useState("");
+    const [terminatedDateTo, setTerminatedDateTo] = useState("");
 
     const [page, setPage] = useState(1);
     console.log("page =", page);
@@ -95,6 +99,10 @@ export default function DashboardPage() {
                 serverOwner,
                 createDateFrom,
                 createDateTo,
+                decommissionDateFrom,
+                decommissionDateTo,
+                terminatedDateFrom,
+                terminatedDateTo,
                 page,
                 limit,
             });
@@ -132,8 +140,21 @@ export default function DashboardPage() {
 
     useEffect(() => {
         refetch();
-    }, [search, location, env, status, power, critical, serverOwner, createDateFrom,
-        createDateTo, page, limit]);
+    }, [search,
+        location,
+        env,
+        status,
+        power,
+        critical,
+        serverOwner,
+        createDateFrom,
+        createDateTo,
+        decommissionDateFrom,
+        decommissionDateTo,
+        terminatedDateFrom,
+        terminatedDateTo,
+        page,
+        limit]);
 
     useEffect(() => {
         try {
@@ -156,6 +177,21 @@ export default function DashboardPage() {
         if (!next.status) setStatus("ALL");
         if (!next.power) setPower("ALL");
         if (!next.critical) setCritical("ALL");
+
+        if (!next.createDate) {
+            setCreateDateFrom("");
+            setCreateDateTo("");
+        }
+
+        if (!next.decommissionDate) {
+            setDecommissionDateFrom("");
+            setDecommissionDateTo("");
+        }
+
+        if (!next.terminatedDate) {
+            setTerminatedDateFrom("");
+            setTerminatedDateTo("");
+        }
 
         setVisibleFilters(next);
         setPage(1);
@@ -215,6 +251,10 @@ export default function DashboardPage() {
                     serverOwner,
                     createDateFrom,
                     createDateTo,
+                    decommissionDateFrom,
+                    decommissionDateTo,
+                    terminatedDateFrom,
+                    terminatedDateTo,
                 }}
             />
 
@@ -242,6 +282,18 @@ export default function DashboardPage() {
 
                 createDateTo={createDateTo}
                 onCreateDateToChange={setCreateDateTo}
+
+                decommissionDateFrom={decommissionDateFrom}
+                onDecommissionDateFromChange={setDecommissionDateFrom}
+
+                decommissionDateTo={decommissionDateTo}
+                onDecommissionDateToChange={setDecommissionDateTo}
+
+                terminatedDateFrom={terminatedDateFrom}
+                onTerminatedDateFromChange={setTerminatedDateFrom}
+
+                terminatedDateTo={terminatedDateTo}
+                onTerminatedDateToChange={setTerminatedDateTo}
             />
 
             {/* Count + Table */}

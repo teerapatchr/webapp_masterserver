@@ -88,6 +88,7 @@ app.get("/api/servers/export", async (req, res) => {
       terminatedDateTo,
       columns,
     } = req.query;
+    console.log("EXPORT QUERY:", req.query);
 
     // ---- 1) parse selected columns ----
     const requested = String(columns || "")
@@ -176,7 +177,20 @@ app.get("/api/servers/export", async (req, res) => {
 
     // ---- 3) query all matching rows (NO pagination) ----
     // safe SELECT list: only from EXPORT_COLUMNS keys
-    const selectCols = cols.map((c) => `"${c}"`).join(", ");
+    const selectCols = cols
+      .map((c) => {
+        if (c === "decom_duration_days") {
+          return `
+        CASE
+          WHEN decommission_date IS NULL OR TRIM(decommission_date) = ''
+          THEN NULL
+          ELSE CURRENT_DATE - TO_DATE(decommission_date, 'MM/DD/YYYY')
+        END AS decom_duration_days
+      `;
+        }
+        return `"${c}"`;
+      })
+      .join(", ");
 
     const sql = `
       SELECT ${selectCols}
@@ -341,7 +355,12 @@ app.get("/api/servers", async (req, res) => {
         status,
         power_state,
         critical_app,
-        pttep_server_owner
+        pttep_server_owner,
+        CASE
+          WHEN decommission_date IS NULL OR TRIM(decommission_date) = ''
+          THEN NULL
+          ELSE CURRENT_DATE - TO_DATE(decommission_date, 'MM/DD/YYYY')
+        END AS decom_duration_days
       FROM server_inventory
       ${where}
       ORDER BY ${sortCol} ${sortOrder}
@@ -533,11 +552,17 @@ app.get("/api/servers/:id", async (req, res) => {
     const { id } = req.params;
 
     const sql = `
-      SELECT *
+      SELECT
+        *,
+        CASE
+          WHEN decommission_date IS NULL OR TRIM(decommission_date) = ''
+          THEN NULL
+          ELSE CURRENT_DATE - TO_DATE(decommission_date, 'MM/DD/YYYY')
+        END AS decom_duration_days
       FROM server_inventory
       WHERE id = $1
       LIMIT 1
-    `;
+`;
 
     const r = await pool.query(sql, [id]);
 
