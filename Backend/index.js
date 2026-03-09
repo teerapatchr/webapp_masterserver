@@ -16,7 +16,6 @@ const pool = new Pool({
 
 // Define export columns and their groups
 const EXPORT_COLUMNS = [
-  { key: "id", label: "ID", group: "Identity" },
   { key: "server_name", label: "Server Name", group: "Identity" },
   { key: "ip_address", label: "IP Address", group: "Identity" },
   { key: "dns_name", label: "DNS Name", group: "Identity" },
@@ -41,7 +40,7 @@ const EXPORT_COLUMNS = [
 
   { key: "os", label: "OS", group: "System" },
   { key: "os_version", label: "OS Version", group: "System" },
-  { key: "os_service_pack", label: "OS Service Pack", group: "System" },
+  { key: "service_pack", label: "OS Service Pack", group: "System" },
   { key: "cpu", label: "CPU", group: "System" },
   { key: "memory", label: "Memory", group: "System" },
   { key: "disk", label: "Disk", group: "System" },
@@ -80,7 +79,14 @@ app.get("/api/servers/export", async (req, res) => {
       status,
       power,
       critical,
-      columns, // comma-separated keys
+      serverOwner,
+      createDateFrom,
+      createDateTo,
+      decommissionDateFrom,
+      decommissionDateTo,
+      terminatedDateFrom,
+      terminatedDateTo,
+      columns,
     } = req.query;
 
     // ---- 1) parse selected columns ----
@@ -107,10 +113,12 @@ app.get("/api/servers/export", async (req, res) => {
     if (q && String(q).trim() !== "") {
       params.push(String(q).trim());
       where += ` AND (
-        server_name ILIKE '%' || $${i} || '%'
-        OR ip_address ILIKE '%' || $${i} || '%'
-        OR application_name ILIKE '%' || $${i} || '%'
-      )`;
+    server_name ILIKE '%' || $${i} || '%'
+    OR ip_address ILIKE '%' || $${i} || '%'
+    OR application_name ILIKE '%' || $${i} || '%'
+    OR pttep_server_owner ILIKE '%' || $${i} || '%'
+    OR pttep_application_owner ILIKE '%' || $${i} || '%'
+  )`;
       i++;
     }
 
@@ -127,6 +135,44 @@ app.get("/api/servers/export", async (req, res) => {
     addEq("status", status);
     addEq("power_state", power);
     addEq("critical_app", critical);
+    addEq("pttep_server_owner", serverOwner);
+
+    if (createDateFrom) {
+      params.push(String(createDateFrom));
+      where += ` AND create_date IS NOT NULL AND TRIM(create_date) <> '' AND TO_DATE(create_date, 'MM/DD/YYYY') >= $${i}`;
+      i++;
+    }
+
+    if (createDateTo) {
+      params.push(String(createDateTo));
+      where += ` AND create_date IS NOT NULL AND TRIM(create_date) <> '' AND TO_DATE(create_date, 'MM/DD/YYYY') <= $${i}`;
+      i++;
+    }
+
+    if (decommissionDateFrom) {
+      params.push(String(decommissionDateFrom));
+      where += ` AND decommission_date IS NOT NULL AND TRIM(decommission_date) <> '' AND TO_DATE(decommission_date, 'MM/DD/YYYY') >= $${i}`;
+      i++;
+    }
+
+    if (decommissionDateTo) {
+      params.push(String(decommissionDateTo));
+      where += ` AND decommission_date IS NOT NULL AND TRIM(decommission_date) <> '' AND TO_DATE(decommission_date, 'MM/DD/YYYY') <= $${i}`;
+      i++;
+    }
+
+    if (terminatedDateFrom) {
+      params.push(String(terminatedDateFrom));
+      where += ` AND terminated_date IS NOT NULL AND TRIM(terminated_date) <> '' AND TO_DATE(terminated_date, 'MM/DD/YYYY') >= $${i}`;
+      i++;
+    }
+
+    if (terminatedDateTo) {
+      params.push(String(terminatedDateTo));
+      where += ` AND terminated_date IS NOT NULL AND TRIM(terminated_date) <> '' AND TO_DATE(terminated_date, 'MM/DD/YYYY') <= $${i}`;
+      i++;
+    }
+
 
     // ---- 3) query all matching rows (NO pagination) ----
     // safe SELECT list: only from EXPORT_COLUMNS keys
@@ -170,6 +216,17 @@ app.get("/api/servers", async (req, res) => {
       status,
       power,
       critical,
+      serverOwner,
+
+      createDateFrom,
+      createDateTo,
+      decommissionDateFrom,
+      decommissionDateTo,
+      terminatedDateFrom,
+      terminatedDateTo,
+
+
+
       page = "1",
       limit = "50",
       sortBy = "server_name",
@@ -203,6 +260,8 @@ app.get("/api/servers", async (req, res) => {
         server_name ILIKE '%' || $${i} || '%'
         OR ip_address ILIKE '%' || $${i} || '%'
         OR application_name ILIKE '%' || $${i} || '%'
+        OR pttep_server_owner ILIKE '%' || $${i} || '%'
+        OR pttep_application_owner ILIKE '%' || $${i} || '%'
       )`;
       i++;
     }
@@ -221,6 +280,43 @@ app.get("/api/servers", async (req, res) => {
     addEq("status", status);
     addEq("power_state", power);
     addEq("critical_app", critical);
+    addEq("pttep_server_owner", serverOwner);
+
+    if (createDateFrom) {
+      params.push(String(createDateFrom));
+      where += ` AND create_date IS NOT NULL AND create_date <> '' AND TO_DATE(create_date, 'MM/DD/YYYY') >= $${i}`;
+      i++;
+    }
+
+    if (createDateTo) {
+      params.push(String(createDateTo));
+      where += ` AND create_date IS NOT NULL AND create_date <> '' AND TO_DATE(create_date, 'MM/DD/YYYY') <= $${i}`;
+      i++;
+    }
+
+    if (decommissionDateFrom) {
+      params.push(String(decommissionDateFrom));
+      where += ` AND decommission_date IS NOT NULL AND decommission_date <> '' AND TO_DATE(decommission_date, 'MM/DD/YYYY') >= $${i}`;
+      i++;
+    }
+
+    if (decommissionDateTo) {
+      params.push(String(decommissionDateTo));
+      where += ` AND decommission_date IS NOT NULL AND decommission_date <> '' AND TO_DATE(decommission_date, 'MM/DD/YYYY') <= $${i}`;
+      i++;
+    }
+
+    if (terminatedDateFrom) {
+      params.push(String(terminatedDateFrom));
+      where += ` AND terminated_date IS NOT NULL AND terminated_date <> '' AND TO_DATE(terminated_date, 'MM/DD/YYYY') >= $${i}`;
+      i++;
+    }
+
+    if (terminatedDateTo) {
+      params.push(String(terminatedDateTo));
+      where += ` AND terminated_date IS NOT NULL AND terminated_date <> '' AND TO_DATE(terminated_date, 'MM/DD/YYYY') <= $${i}`;
+      i++;
+    }
 
     // count
     const countSql = `

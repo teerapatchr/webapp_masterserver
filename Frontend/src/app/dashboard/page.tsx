@@ -34,12 +34,15 @@ export default function DashboardPage() {
     const [status, setStatus] = useState("ALL");
     const [power, setPower] = useState("ALL");
     const [critical, setCritical] = useState("ALL");
+    const [serverOwner, setServerOwner] = useState("ALL");
     const [selected, setSelected] = useState<ServerDetail | null>(null);
     const [open, setOpen] = useState(false);
     const [items, setItems] = useState<ServerInventory[]>([]);
     const [totalItems, setTotalItems] = useState(0);
     const [loading, setLoading] = useState(false);
     const [exportOpen, setExportOpen] = useState(false);
+    const [createDateFrom, setCreateDateFrom] = useState("");
+    const [createDateTo, setCreateDateTo] = useState("");
 
     const [page, setPage] = useState(1);
     console.log("page =", page);
@@ -89,6 +92,9 @@ export default function DashboardPage() {
                 status,
                 power,
                 critical,
+                serverOwner,
+                createDateFrom,
+                createDateTo,
                 page,
                 limit,
             });
@@ -126,7 +132,8 @@ export default function DashboardPage() {
 
     useEffect(() => {
         refetch();
-    }, [search, location, env, status, power, critical, page, limit]);
+    }, [search, location, env, status, power, critical, serverOwner, createDateFrom,
+        createDateTo, page, limit]);
 
     useEffect(() => {
         try {
@@ -205,6 +212,9 @@ export default function DashboardPage() {
                     status,
                     power,
                     critical,
+                    serverOwner,
+                    createDateFrom,
+                    createDateTo,
                 }}
             />
 
@@ -224,6 +234,14 @@ export default function DashboardPage() {
                 onCriticalChange={setCritical}
                 visibleFilters={visibleFilters}
                 onVisibleFiltersChange={handleVisibleFiltersChange}
+                serverOwner={serverOwner}
+                onServerOwnerChange={setServerOwner}
+
+                createDateFrom={createDateFrom}
+                onCreateDateFromChange={setCreateDateFrom}
+
+                createDateTo={createDateTo}
+                onCreateDateToChange={setCreateDateTo}
             />
 
             {/* Count + Table */}

@@ -19,7 +19,13 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 
-export type FilterKey = "location" | "env" | "status" | "power" | "critical";
+export type FilterKey =
+    | "location"
+    | "env"
+    | "status"
+    | "power"
+    | "critical"
+    | "createDate";
 export type VisibleFilters = Record<FilterKey, boolean>;
 
 export const DEFAULT_VISIBLE_FILTERS: VisibleFilters = {
@@ -27,7 +33,8 @@ export const DEFAULT_VISIBLE_FILTERS: VisibleFilters = {
     env: true,
     status: true,
     power: true,
-    critical: true,
+    critical: false,
+    createDate: true,
 };
 
 const FILTER_LABELS: Record<FilterKey, string> = {
@@ -36,6 +43,7 @@ const FILTER_LABELS: Record<FilterKey, string> = {
     status: "Status",
     power: "Power State",
     critical: "Critical App",
+    createDate: "Create Date",
 };
 
 type Props = {
@@ -57,8 +65,18 @@ type Props = {
     critical: string;
     onCriticalChange: (v: string) => void;
 
+    serverOwner: string;
+    onServerOwnerChange: (v: string) => void;
+
     visibleFilters: VisibleFilters;
     onVisibleFiltersChange: (next: VisibleFilters) => void;
+
+    createDateFrom: string;
+    createDateTo: string;
+
+    onCreateDateFromChange: (v: string) => void;
+    onCreateDateToChange: (v: string) => void;
+
 };
 
 export function ServerFilters(props: Props) {
@@ -72,7 +90,7 @@ export function ServerFilters(props: Props) {
                     <Input
                         value={props.search}
                         onChange={(e) => props.onSearchChange(e.target.value)}
-                        placeholder="Search by Server Name, IP Address, or Application Name"
+                        placeholder="Search by Server Name, IP Address, Application Name, or Owner"
                     />
                 </div>
 
@@ -169,6 +187,26 @@ export function ServerFilters(props: Props) {
                                 <SelectItem value="No">No</SelectItem>
                             </SelectContent>
                         </Select>
+                    </div>
+                )}
+
+                {props.visibleFilters.createDate && (
+                    <div className="space-y-2">
+                        <div className="text-sm font-medium">Create Date</div>
+
+                        <div className="flex gap-2">
+                            <Input
+                                type="date"
+                                value={props.createDateFrom}
+                                onChange={(e) => props.onCreateDateFromChange(e.target.value)}
+                            />
+
+                            <Input
+                                type="date"
+                                value={props.createDateTo}
+                                onChange={(e) => props.onCreateDateToChange(e.target.value)}
+                            />
+                        </div>
                     </div>
                 )}
 

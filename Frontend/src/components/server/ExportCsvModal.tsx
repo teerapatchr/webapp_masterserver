@@ -20,6 +20,9 @@ type Props = {
         status?: string;
         power?: string;
         critical?: string;
+        serverOwner?: string;
+        createDateFrom?: string;
+        createDateTo?: string;
     };
 };
 
@@ -36,7 +39,7 @@ export function ExportCsvModal({ open, onClose, filters }: Props) {
 
         // ✅ set defaults immediately so button isn't dead
         setSelected(
-            new Set(["server_name", "ip_address", "application_name", "location", "system_environment", "status"])
+            new Set(["server_name", "ip_address", "application_name", "location", "system_environment"])
         );
 
         setLoadingCols(true);
@@ -72,6 +75,37 @@ export function ExportCsvModal({ open, onClose, filters }: Props) {
         });
     };
 
+    const filteredCols = cols.filter((c) => {
+        const s = search.trim().toLowerCase();
+        if (!s) return true;
+        return c.key.toLowerCase().includes(s) || c.label.toLowerCase().includes(s) || c.group.toLowerCase().includes(s);
+    });
+
+    const allFilteredKeys = filteredCols.map((c) => c.key);
+
+    const allFilteredSelected =
+        allFilteredKeys.length > 0 &&
+        allFilteredKeys.every((key) => selected.has(key));
+
+    const someFilteredSelected =
+        allFilteredKeys.some((key) => selected.has(key));
+
+    const toggleSelectAllFiltered = (checked: boolean) => {
+        setSelected((prev) => {
+            const next = new Set(prev);
+
+            if (checked) {
+                allFilteredKeys.forEach((key) => next.add(key));
+            } else {
+                allFilteredKeys.forEach((key) => next.delete(key));
+            }
+
+            return next;
+        });
+    };
+
+    const clearAll = () => setSelected(new Set());
+
     const exportNow = () => {
         const columns = Array.from(selected).join(",");
 
@@ -82,19 +116,18 @@ export function ExportCsvModal({ open, onClose, filters }: Props) {
             status: filters.status ?? "ALL",
             power: filters.power ?? "ALL",
             critical: filters.critical ?? "ALL",
+            serverOwner: filters.serverOwner ?? "ALL",
+            createDateFrom: filters.createDateFrom ?? "",
+            createDateTo: filters.createDateTo ?? "",
             columns,
         });
 
         // trigger download
-        window.location.href = `http://localhost:4000/api/servers/export?${params.toString()}`;
+        const base = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:4000";
+        window.location.href = `${base}/api/servers/export?${params.toString()}`;
         onClose();
     };
 
-    const filteredCols = cols.filter((c) => {
-        const s = search.trim().toLowerCase();
-        if (!s) return true;
-        return c.key.toLowerCase().includes(s) || c.label.toLowerCase().includes(s) || c.group.toLowerCase().includes(s);
-    });
 
     // group for nicer UI
     const grouped = filteredCols.reduce<Record<string, ExportCol[]>>((acc, c) => {
@@ -119,6 +152,26 @@ export function ExportCsvModal({ open, onClose, filters }: Props) {
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                     />
+
+                    <div className="flex items-center justify-between gap-2">
+                        <label className="flex items-center gap-2 text-sm font-medium">
+                            <Checkbox
+                                checked={allFilteredSelected}
+                                onCheckedChange={(checked) => toggleSelectAllFiltered(!!checked)}
+                            />
+                            <span>Select all</span>
+                        </label>
+
+                        <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={clearAll}
+                            disabled={selected.size === 0}
+                        >
+                            Clear
+                        </Button>
+                    </div>
 
                     <div className="max-h-[50vh] overflow-auto border rounded-md p-3 space-y-4">
                         {Object.entries(grouped).map(([group, items]) => (

@@ -8,10 +8,20 @@ export async function fetchServers(query: ServerListQuery): Promise<ServerListRe
 
   if (query.q) params.set("q", query.q);
   if (query.location && query.location !== "ALL") params.set("location", query.location);
-if (query.env && query.env !== "ALL") params.set("env", query.env);
-if (query.status && query.status !== "ALL") params.set("status", query.status);
-if (query.power && query.power !== "ALL") params.set("power", query.power);
-if (query.critical && query.critical !== "ALL") params.set("critical", query.critical);
+  if (query.env && query.env !== "ALL") params.set("env", query.env);
+  if (query.status && query.status !== "ALL") params.set("status", query.status);
+  if (query.power && query.power !== "ALL") params.set("power", query.power);
+  if (query.critical && query.critical !== "ALL") params.set("critical", query.critical);
+  if (query.serverOwner && query.serverOwner !== "ALL") params.set("serverOwner", query.serverOwner);
+
+  if (query.createDateFrom) params.set("createDateFrom", query.createDateFrom);
+  if (query.createDateTo) params.set("createDateTo", query.createDateTo);
+
+  if (query.decommissionDateFrom) params.set("decommissionDateFrom", query.decommissionDateFrom);
+  if (query.decommissionDateTo) params.set("decommissionDateTo", query.decommissionDateTo);
+
+  if (query.terminatedDateFrom) params.set("terminatedDateFrom", query.terminatedDateFrom);
+  if (query.terminatedDateTo) params.set("terminatedDateTo", query.terminatedDateTo);
 
   params.set("page", String(query.page ?? 1));
   params.set("limit", String(query.limit ?? 50));
@@ -24,12 +34,12 @@ if (query.critical && query.critical !== "ALL") params.set("critical", query.cri
   });
 
   if (!res.ok) {
-  let details = "";
-  try {
-    details = await res.text(); // backend sends { error: "..." }
-  } catch {}
-  throw new Error(`fetchServers failed: ${res.status} ${details}`);
-}
+    let details = "";
+    try {
+      details = await res.text(); // backend sends { error: "..." }
+    } catch { }
+    throw new Error(`fetchServers failed: ${res.status} ${details}`);
+  }
 
   return res.json();
 }

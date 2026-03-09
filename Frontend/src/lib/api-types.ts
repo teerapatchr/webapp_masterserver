@@ -7,10 +7,20 @@ export type ServerListQuery = {
   status?: string;
   power?: string;
   critical?: string;
+  serverOwner?: string;
   page?: number;
   limit?: number;
   sortBy?: string;
   sortDir?: "asc" | "desc";
+
+  createDateFrom?: string;
+  createDateTo?: string;
+
+  decommissionDateFrom?: string;
+  decommissionDateTo?: string;
+
+  terminatedDateFrom?: string;
+  terminatedDateTo?: string;
 };
 
 export type PaginatedResponse<T> = {
