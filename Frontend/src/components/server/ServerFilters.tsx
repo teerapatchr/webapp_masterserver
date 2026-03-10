@@ -129,10 +129,31 @@ export function ServerFilters(props: Props) {
                             </SelectTrigger>
                             <SelectContent>
                                 <SelectItem value="ALL">All Locations</SelectItem>
-                                <SelectItem value="ART">ART</SelectItem>
-                                <SelectItem value="GBS">GBS</SelectItem>
                                 <SelectItem value="HQ">HQ</SelectItem>
-                                <SelectItem value="GBN">GBN</SelectItem>
+                                <SelectItem value="OC">OC</SelectItem>
+                                <SelectItem value="Azure">Azure</SelectItem>
+                                <SelectItem value="ART">ART</SelectItem>
+                                <SelectItem value="G2S">G2S</SelectItem>
+                                <SelectItem value="SKL">SKL</SelectItem>
+                                <SelectItem value="LKU">LKU</SelectItem>
+                                <SelectItem value="SPH">SPH</SelectItem>
+                                <SelectItem value="SRC">SRC</SelectItem>
+                                <SelectItem value="AU">AU</SelectItem>
+                                <SelectItem value="MLD">MLD</SelectItem>
+                                <SelectItem value="RGN">RGN</SelectItem>
+                                <SelectItem value="ZPQ">ZPQ</SelectItem>
+                                <SelectItem value="ZOC">ZOC</SelectItem>
+                                <SelectItem value="YDNRGN">YDNRGN</SelectItem>
+                                <SelectItem value="YDNYAD">YDNYAD</SelectItem>
+                                <SelectItem value="YDNPLC">YDNPLC</SelectItem>
+                                <SelectItem value="KUL">KUL</SelectItem>
+                                <SelectItem value="KIK">KIK</SelectItem>
+                                <SelectItem value="LAB">LAB</SelectItem>
+                                <SelectItem value="BORF">BORF</SelectItem>
+                                <SelectItem value="BTU">BTU</SelectItem>
+                                <SelectItem value="FLNG">FLNG</SelectItem>
+                                <SelectItem value="PSRC">PSRC</SelectItem>
+
                             </SelectContent>
                         </Select>
                     </div>
@@ -171,7 +192,7 @@ export function ServerFilters(props: Props) {
                                 <SelectItem value="ALL">All Statuses</SelectItem>
                                 <SelectItem value="Operation">Operation</SelectItem>
                                 <SelectItem value="Decommissioning">Decommissioning</SelectItem>
-                                <SelectItem value="Maintenance">Maintenance</SelectItem>
+                                <SelectItem value="Terminated">Terminated</SelectItem>
                             </SelectContent>
                         </Select>
                     </div>

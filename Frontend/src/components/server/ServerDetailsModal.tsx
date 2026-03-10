@@ -24,6 +24,7 @@ export function ServerDetailsModal({ open, onClose, server, onUpdated, onDeleted
     const [saving, setSaving] = useState(false);
     const [deleting, setDeleting] = useState(false);
 
+    // which fields are editable in edit mode? (not all fields are editable)
     const editableKeys = new Set<keyof ServerDetail>([
         "server_name",
         "ip_address",

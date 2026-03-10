@@ -1,5 +1,4 @@
 "use client";
-
 import { useMemo, useRef } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { Badge } from "@/components/ui/badge";
@@ -8,17 +7,18 @@ import type { VisibleFilters } from "@/components/server/ServerFilters";
 
 function PowerDot({ state }: { state: string }) {
     const s = (state ?? "").toLowerCase();
-    const isOn = state.toLowerCase() === "on";
+    const isOn = s.includes("on");
     return (
         <div className="flex items-center gap-2">
             <span
-                className={`h-2.5 w-2.5 rounded-full ${isOn ? "bg-green-500" : "bg-slate-400"
+                className={`h-3 w-3 rounded-full ${isOn ? "bg-green-500" : "bg-slate-400"
                     }`}
             />
-            <span className="text-sm">{state}</span>
+            <span className="text-sm">{state || "-"}</span>
         </div>
     );
 }
+
 export type ColumnKey =
     | "server_name"
     | "ip_address"
@@ -53,25 +53,11 @@ export function ServerTable({
         ];
 
         const optional = [
-            ...(visibleFilters.location
-                ? [{ key: "location", label: "Location", width: "130px" }]
-                : []),
-
-            ...(visibleFilters.env
-                ? [{ key: "system_environment", label: "Environment", width: "140px" }]
-                : []),
-
-            ...(visibleFilters.status
-                ? [{ key: "status", label: "Status", width: "160px" }]
-                : []),
-
-            ...(visibleFilters.power
-                ? [{ key: "power_state", label: "Power", width: "140px" }]
-                : []),
-
-            ...(visibleFilters.critical
-                ? [{ key: "critical_app", label: "Critical", width: "110px" }]
-                : []),
+            { key: "location", label: "Location", width: "130px" },
+            { key: "system_environment", label: "Environment", width: "140px" },
+            { key: "status", label: "Status", width: "160px" },
+            { key: "power_state", label: "Power", width: "140px" },
+            { key: "critical_app", label: "Critical", width: "110px" },
         ];
 
         const tail = [
@@ -182,19 +168,47 @@ export function ServerTable({
                                                 </div>
                                             );
 
-                                        case "system_environment":
-                                            return (
-                                                <div key={c.key} className="px-4 py-3">
-                                                    <Badge variant="outline">{s.system_environment}</Badge>
-                                                </div>
-                                            );
+                                        case "system_environment": {
+                                            const env = s.system_environment;
 
-                                        case "status":
+                                            const envColor =
+                                                env === "PRD"
+                                                    ? "bg-red-100 text-red-700"
+                                                    : env === "UAT"
+                                                        ? "bg-yellow-100 text-yellow-800"
+                                                        : env === "QAS"
+                                                            ? "bg-orange-100 text-orange-800"
+                                                            : env === "DEV"
+                                                                ? "bg-blue-100 text-blue-700"
+                                                                : env === "POC"
+                                                                    ? "bg-purple-100 text-purple-700"
+                                                                    : "bg-gray-100 text-gray-700";
+
                                             return (
                                                 <div key={c.key} className="px-4 py-3">
-                                                    <Badge variant="outline">{s.status}</Badge>
+                                                    <Badge className={envColor}>{env}</Badge>
                                                 </div>
                                             );
+                                        }
+
+                                        case "status": {
+                                            const status = s.status;
+
+                                            const statusColor =
+                                                status === "Operation"
+                                                    ? "bg-green-100 text-green-700"
+                                                    : status === "Decommissioning"
+                                                        ? "bg-yellow-100 text-yellow-800"
+                                                        : status === "Terminated"
+                                                            ? "bg-red-100 text-red-700"
+                                                            : "bg-gray-100 text-gray-700";
+
+                                            return (
+                                                <div key={c.key} className="px-4 py-3">
+                                                    <Badge className={statusColor}>{status}</Badge>
+                                                </div>
+                                            );
+                                        }
 
                                         case "power_state":
                                             return (

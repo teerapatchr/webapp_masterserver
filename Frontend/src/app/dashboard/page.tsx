@@ -38,7 +38,6 @@ export default function DashboardPage() {
     const [selected, setSelected] = useState<ServerDetail | null>(null);
     const [open, setOpen] = useState(false);
     const [items, setItems] = useState<ServerInventory[]>([]);
-    const [totalItems, setTotalItems] = useState(0);
     const [loading, setLoading] = useState(false);
     const [exportOpen, setExportOpen] = useState(false);
     const [createDateFrom, setCreateDateFrom] = useState("");
@@ -140,7 +139,8 @@ export default function DashboardPage() {
 
     useEffect(() => {
         refetch();
-    }, [search,
+    }, [
+        search,
         location,
         env,
         status,
@@ -154,7 +154,26 @@ export default function DashboardPage() {
         terminatedDateFrom,
         terminatedDateTo,
         page,
-        limit]);
+        limit,
+    ]);
+
+    useEffect(() => {
+        setPage(1);
+    }, [
+        search,
+        location,
+        env,
+        status,
+        power,
+        critical,
+        serverOwner,
+        createDateFrom,
+        createDateTo,
+        decommissionDateFrom,
+        decommissionDateTo,
+        terminatedDateFrom,
+        terminatedDateTo
+    ]);
 
     useEffect(() => {
         try {
@@ -298,9 +317,6 @@ export default function DashboardPage() {
 
             {/* Count + Table */}
             <div className="space-y-2">
-                <div className="text-sm text-muted-foreground">
-                    {loading ? "Loading..." : `Showing ${items.length} of ${totalItems} servers`}
-                </div>
                 <ServerTable data={items} onRowClick={handleRowClick} visibleFilters={visibleFilters} visibleColumns={visibleColumns} />
 
                 <div className="flex items-center justify-between pt-4">

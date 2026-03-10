@@ -298,37 +298,55 @@ app.get("/api/servers", async (req, res) => {
 
     if (createDateFrom) {
       params.push(String(createDateFrom));
-      where += ` AND create_date IS NOT NULL AND create_date <> '' AND TO_DATE(create_date, 'MM/DD/YYYY') >= $${i}`;
+      where += ` AND create_date IS NOT NULL
+             AND TRIM(create_date) <> ''
+             AND TRIM(create_date) ~ '^[0-9]{1,2}/[0-9]{1,2}/[0-9]{4}$'
+             AND TO_DATE(TRIM(create_date), 'MM/DD/YYYY') >= $${i}`;
       i++;
     }
 
     if (createDateTo) {
       params.push(String(createDateTo));
-      where += ` AND create_date IS NOT NULL AND create_date <> '' AND TO_DATE(create_date, 'MM/DD/YYYY') <= $${i}`;
+      where += ` AND create_date IS NOT NULL
+             AND TRIM(create_date) <> ''
+             AND TRIM(create_date) ~ '^[0-9]{1,2}/[0-9]{1,2}/[0-9]{4}$'
+             AND TO_DATE(TRIM(create_date), 'MM/DD/YYYY') <= $${i}`;
       i++;
     }
 
     if (decommissionDateFrom) {
       params.push(String(decommissionDateFrom));
-      where += ` AND decommission_date IS NOT NULL AND decommission_date <> '' AND TO_DATE(decommission_date, 'MM/DD/YYYY') >= $${i}`;
+      where += ` AND decommission_date IS NOT NULL
+             AND TRIM(decommission_date) <> ''
+             AND TRIM(decommission_date) ~ '^[0-9]{1,2}/[0-9]{1,2}/[0-9]{4}$'
+             AND TO_DATE(TRIM(decommission_date), 'MM/DD/YYYY') >= $${i}`;
       i++;
     }
 
     if (decommissionDateTo) {
       params.push(String(decommissionDateTo));
-      where += ` AND decommission_date IS NOT NULL AND decommission_date <> '' AND TO_DATE(decommission_date, 'MM/DD/YYYY') <= $${i}`;
+      where += ` AND decommission_date IS NOT NULL
+             AND TRIM(decommission_date) <> ''
+             AND TRIM(decommission_date) ~ '^[0-9]{1,2}/[0-9]{1,2}/[0-9]{4}$'
+             AND TO_DATE(TRIM(decommission_date), 'MM/DD/YYYY') <= $${i}`;
       i++;
     }
 
     if (terminatedDateFrom) {
       params.push(String(terminatedDateFrom));
-      where += ` AND terminated_date IS NOT NULL AND terminated_date <> '' AND TO_DATE(terminated_date, 'MM/DD/YYYY') >= $${i}`;
+      where += ` AND terminated_date IS NOT NULL
+             AND TRIM(terminated_date) <> ''
+             AND TRIM(terminated_date) ~ '^[0-9]{1,2}/[0-9]{1,2}/[0-9]{4}$'
+             AND TO_DATE(TRIM(terminated_date), 'MM/DD/YYYY') >= $${i}`;
       i++;
     }
 
     if (terminatedDateTo) {
       params.push(String(terminatedDateTo));
-      where += ` AND terminated_date IS NOT NULL AND terminated_date <> '' AND TO_DATE(terminated_date, 'MM/DD/YYYY') <= $${i}`;
+      where += ` AND terminated_date IS NOT NULL
+             AND TRIM(terminated_date) <> ''
+             AND TRIM(terminated_date) ~ '^[0-9]{1,2}/[0-9]{1,2}/[0-9]{4}$'
+             AND TO_DATE(TRIM(terminated_date), 'MM/DD/YYYY') <= $${i}`;
       i++;
     }
 
