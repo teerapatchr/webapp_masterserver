@@ -45,23 +45,20 @@ export function ServerTable({
 
     const columns = useMemo(() => {
         const base = [
-            { key: "server_name", label: "Server Name", width: "200px" },
-            { key: "ip_address", label: "IP Address", width: "170px" },
-
-            // expand
-            { key: "application_name", label: "Application Name", width: "2fr" },
+            { key: "server_name", label: "Server Name", width: "minmax(180px, 1.2fr)" },
+            { key: "ip_address", label: "IP Address", width: "minmax(150px, 1fr)" },
+            { key: "application_name", label: "Application Name", width: "minmax(220px, 2fr)" },
         ];
 
         const optional = [
-            { key: "location", label: "Location", width: "130px" },
-            { key: "system_environment", label: "Environment", width: "140px" },
-            { key: "status", label: "Status", width: "160px" },
-            { key: "power_state", label: "Power", width: "140px" },
-            { key: "critical_app", label: "Critical", width: "110px" },
+            { key: "location", label: "Location", width: "minmax(120px, 1fr)" },
+            { key: "system_environment", label: "Environment", width: "minmax(120px, 1fr)" },
+            { key: "status", label: "Status", width: "minmax(140px, 1.1fr)" },
+            { key: "power_state", label: "Power State", width: "minmax(120px, 1fr)" },
+            { key: "critical_app", label: "Critical", width: "minmax(100px, 0.8fr)" },
         ];
 
         const tail = [
-            // expand but less than app
             { key: "pttep_server_owner", label: "Owner", width: "1.5fr" },
         ];
 
@@ -92,11 +89,11 @@ export function ServerTable({
         <div className="rounded-xl border overflow-hidden">
             {/* Header */}
             <div
-                className="sticky top-0 z-10 bg-background border-b"
+                className="sticky top-0 z-20 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 border-b shadow-sm"
                 style={{ display: "grid", gridTemplateColumns }}
             >
                 {columns.map((c) => (
-                    <div key={c.key} className="px-4 py-3 text-sm font-medium">
+                    <div key={c.key} className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                         {c.label}
                     </div>
                 ))}
