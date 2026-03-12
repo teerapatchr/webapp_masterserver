@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { createServer } from "@/lib/server-api";
 import type { ServerDetail } from "@/lib/types";
+import { buildCreateServerPayload } from "@/lib/server/buildCreateServerPayload";
 
 //Type to insert into database.
 type FormState = {
@@ -161,61 +162,9 @@ export function AddServerModal({
     const handleCreate = async () => {
         try {
             setSaving(true);
-
-            // Build payload matching your DB columns
-            const payload = {
-                server_name: toNullIfEmpty(form.server_name),
-                ip_address: toNullIfEmpty(form.ip_address),
-                dns_name: toNullIfEmpty(form.dns_name),
-
-                power_state: toNullIfEmpty(form.power_state),
-                create_date: toNullIfEmpty(form.create_date),
-
-                location: toNullIfEmpty(form.location),
-                zone_lv: toNullIfEmpty(form.zone_lv),
-
-                application_name: toNullIfEmpty(form.application_name),
-                system_environment: toNullIfEmpty(form.system_environment),
-                function: toNullIfEmpty(form.function),
-
-                status: toNullIfEmpty(form.status),
-
-                decommission_date: toNullIfEmpty(form.decommission_date),
-                decom_duration_days: toIntOrNull(form.decom_duration_days),
-                need_terminate_process: toNullIfEmpty(form.need_terminate_process),
-                terminated_date: toNullIfEmpty(form.terminated_date),
-
-                os: toNullIfEmpty(form.os),
-                os_version: toNullIfEmpty(form.os_version),
-                service_pack: toNullIfEmpty(form.service_pack),
-
-                cpu: toNullIfEmpty(form.cpu),
-                memory: toNullIfEmpty(form.memory),
-                disk: toNullIfEmpty(form.disk),
-
-                update_patch_project: toNullIfEmpty(form.update_patch_project),
-                veritas_backup: toNullIfEmpty(form.veritas_backup),
-                test_dr: toNullIfEmpty(form.test_dr),
-
-                critical_app: toNullIfEmpty(form.critical_app),
-
-                pttep_server_owner: toNullIfEmpty(form.pttep_server_owner),
-                pttep_application_owner: toNullIfEmpty(form.pttep_application_owner),
-
-                application_support_department: toNullIfEmpty(form.application_support_department),
-                application_support_name: toNullIfEmpty(form.application_support_name),
-                application_support_email: toNullIfEmpty(form.application_support_email),
-
-                server_focal_point: toNullIfEmpty(form.server_focal_point),
-
-                request_channel_for_pttep: toNullIfEmpty(form.request_channel_for_pttep),
-                ticket_id_request_for_ptt_digital: toNullIfEmpty(form.ticket_id_request_for_ptt_digital),
-
-                remark: toNullIfEmpty(form.remark),
-            } as any;
-
+            // Payload in lib/server/buildCreateServerPayload.ts will convert empty string to undefined or null based on your DB schema needs.
+            const payload = buildCreateServerPayload(form);
             const created = await createServer(payload);
-
             onCreated(created);
             reset();
             onClose();
@@ -256,14 +205,14 @@ export function AddServerModal({
                         </Section>
 
                         <Section title="Operations (Required)">
-                            <Field label="Power State" value={form.power_state} onChange={set("power_state")} placeholder='e.g. "On" / "Off"' />
+                            <Field label="Power State" value={form.power_state} onChange={set("power_state")} placeholder='e.g. "Power On" / "Power Off"' />
                             <Field label="Status" value={form.status} onChange={set("status")} placeholder='e.g. "Active" / "Inactive"' />
                             <Field label="Critical App" value={form.critical_app} onChange={set("critical_app")} placeholder='e.g. "Yes" / "No"' />
-                            <Field label="Create Date" value={form.create_date} onChange={set("create_date")} placeholder="YYYY-MM-DD (optional)" />
+                            <Field label="Create Date" value={form.create_date} onChange={set("create_date")} placeholder="M/D/YYYY (optional)" />
                         </Section>
 
                         <Section title="Location (Required)">
-                            <Field label="Location" value={form.location} onChange={set("location")} placeholder='e.g. "Bangkok DC"' />
+                            <Field label="Location" value={form.location} onChange={set("location")} placeholder='e.g. "HQ"' />
                             <Field label="Zone LV" value={form.zone_lv} onChange={set("zone_lv")} placeholder="optional" />
                         </Section>
                     </div>
@@ -315,7 +264,7 @@ export function AddServerModal({
                         </Section>
 
                         <Section title="Decommission / Process">
-                            <Field label="Decommission Date" value={form.decommission_date} onChange={set("decommission_date")} placeholder="YYYY-MM-DD (optional)" />
+                            <Field label="Decommission Date" value={form.decommission_date} onChange={set("decommission_date")} placeholder="M/D/YYYY (optional)" />
                             <Field
                                 label="Decom Duration (days)"
                                 value={form.decom_duration_days}
@@ -328,7 +277,7 @@ export function AddServerModal({
                                 onChange={set("need_terminate_process")}
                                 placeholder='e.g. "Yes" / "No" (optional)'
                             />
-                            <Field label="Terminated Date" value={form.terminated_date} onChange={set("terminated_date")} placeholder="YYYY-MM-DD (optional)" />
+                            <Field label="Terminated Date" value={form.terminated_date} onChange={set("terminated_date")} placeholder="M/D/YYYY (optional)" />
                         </Section>
 
                         <Section title="Maintenance / DR">
