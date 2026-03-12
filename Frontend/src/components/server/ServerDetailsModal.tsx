@@ -16,7 +16,7 @@ type Props = {
 };
 
 
-
+// Export ServerDetailsModal to use in Dashboard. This modal shows detailed info of a server and allows editing/deleting the server.
 export function ServerDetailsModal({ open, onClose, server, onUpdated, onDeleted }: Props) {
 
     const [editMode, setEditMode] = useState(false);
