@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import type { ServerDetail } from "@/lib/types";
 import { Button } from "@/components/ui/button";
@@ -188,7 +188,7 @@ export function ServerDetailsModal({ open, onClose, server, onUpdated, onDeleted
                                     <Row
                                         key={String(f.key)}
                                         label={f.label}
-                                        value={String((form as any)?.[f.key] ?? "")}
+                                        value={String(form?.[f.key as keyof typeof form] ?? "")}
                                         editable={editMode && editableKeys.has(f.key)}
                                         onChange={(v) => setField(f.key, v)}
                                     />
@@ -248,22 +248,6 @@ function Row({
     onChange?: (v: string) => void;
 }) {
     const shown = value && value.trim() !== "" ? value : "";
-    const editableKeys = new Set<keyof ServerDetail>([
-        "server_name",
-        "ip_address",
-        "dns_name",
-        "application_name",
-        "location",
-        "system_environment",
-        "status",
-        "power_state",
-        "critical_app",
-        "pttep_server_owner",
-        "pttep_application_owner",
-        "remark",
-    ]);
-
-
     return (
         <div className="grid grid-cols-3 gap-4 px-4 py-3 border-b last:border-b-0 items-center">
             <div className="text-sm font-medium text-muted-foreground">{label}</div>

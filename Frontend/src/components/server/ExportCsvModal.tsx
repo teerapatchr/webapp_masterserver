@@ -1,5 +1,4 @@
 "use client";
-
 import * as React from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -61,9 +60,11 @@ export function ExportCsvModal({ open, onClose, filters }: Props) {
                 }
 
                 setCols(data);
-            } catch (err: any) {
+            } catch (err: unknown) {
                 setCols([]);
-                setLoadError(err?.message || "Failed to load export columns");
+                setLoadError(
+                    err instanceof Error ? err.message : "Failed to load export columns"
+                );
             } finally {
                 setLoadingCols(false);
             }
@@ -157,6 +158,14 @@ export function ExportCsvModal({ open, onClose, filters }: Props) {
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                     />
+
+                    {loadingCols && (
+                        <div className="text-sm text-muted-foreground">Loading columns...</div>
+                    )}
+
+                    {loadError && (
+                        <div className="text-sm text-red-600">{loadError}</div>
+                    )}
 
                     <div className="flex items-center justify-between gap-2">
                         <label className="flex items-center gap-2 text-sm font-medium">

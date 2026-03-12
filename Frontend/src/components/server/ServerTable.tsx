@@ -3,7 +3,6 @@ import { useMemo, useRef } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { Badge } from "@/components/ui/badge";
 import type { ServerInventory } from "@/lib/types";
-import type { VisibleFilters } from "@/components/server/ServerFilters";
 
 function PowerDot({ state }: { state: string }) {
     const s = (state ?? "").toLowerCase();
@@ -33,12 +32,10 @@ export type ColumnKey =
 export function ServerTable({
     data,
     onRowClick,
-    visibleFilters,
     visibleColumns,
 }: {
     data: ServerInventory[];
     onRowClick: (id: string) => void;
-    visibleFilters: VisibleFilters;
     visibleColumns: ColumnKey[];
 }) {
     const parentRef = useRef<HTMLDivElement>(null);
@@ -70,7 +67,7 @@ export function ServerTable({
         // reorder to match visibleColumns order
         const byKey = new Map(visible.map((c) => [c.key as ColumnKey, c]));
         return visibleColumns.map((k) => byKey.get(k)).filter(Boolean) as typeof visible;
-    }, [visibleFilters, visibleColumns]);
+    }, [visibleColumns]);
 
 
     const gridTemplateColumns = useMemo(
@@ -78,6 +75,7 @@ export function ServerTable({
         [columns]
     );
 
+    // eslint-disable-next-line react-hooks/incompatible-library
     const rowVirtualizer = useVirtualizer({
         count: data.length,
         getScrollElement: () => parentRef.current,

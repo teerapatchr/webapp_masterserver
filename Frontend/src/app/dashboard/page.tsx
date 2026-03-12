@@ -339,7 +339,7 @@ export default function DashboardPage() {
 
             {/* Count + Table */}
             <div className="space-y-2">
-                <ServerTable data={items} onRowClick={handleRowClick} visibleFilters={visibleFilters} visibleColumns={visibleColumns} />
+                <ServerTable data={items} onRowClick={handleRowClick} visibleColumns={visibleColumns} />
 
                 <div className="flex items-center justify-between pt-4">
                     <div className="text-sm text-muted-foreground">
@@ -397,7 +397,7 @@ export default function DashboardPage() {
                         <DialogHeader>
                             <DialogTitle>Choose Columns</DialogTitle>
                             <DialogDescription>
-                                Toggle which columns appear in the table.
+                                Customize which columns appear in the table.
                             </DialogDescription>
                         </DialogHeader>
 
