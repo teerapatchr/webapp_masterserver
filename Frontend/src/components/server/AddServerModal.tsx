@@ -114,18 +114,6 @@ const EMPTY: FormState = {
     remark: "",
 };
 
-function toNullIfEmpty(v: string) {
-    const t = v.trim();
-    return t === "" ? null : t;
-}
-
-function toIntOrNull(v: string) {
-    const t = v.trim();
-    if (t === "") return null;
-    const n = Number(t);
-    return Number.isFinite(n) ? n : null;
-}
-
 export function AddServerModal({
     open,
     onClose,

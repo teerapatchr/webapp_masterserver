@@ -1,6 +1,6 @@
 "use client";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { ServerTable } from "@/components/server/ServerTable";
 import { ServerFilters, DEFAULT_VISIBLE_FILTERS, type VisibleFilters } from "@/components/server/ServerFilters";
@@ -86,7 +86,7 @@ export default function DashboardPage() {
         "pttep_server_owner",
     ];
 
-    const refetch = async () => {
+    const refetch = useCallback(async () => {
         setLoading(true);
         try {
             const res = await fetchServers({
@@ -111,7 +111,23 @@ export default function DashboardPage() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [
+        search,
+        location,
+        env,
+        status,
+        power,
+        critical,
+        serverOwner,
+        createDateFrom,
+        createDateTo,
+        decommissionDateFrom,
+        decommissionDateTo,
+        terminatedDateFrom,
+        terminatedDateTo,
+        page,
+        limit,
+    ]);
 
     const [visibleFilters, setVisibleFilters] = useState<VisibleFilters>(
         DEFAULT_VISIBLE_FILTERS
@@ -155,23 +171,7 @@ export default function DashboardPage() {
 
     useEffect(() => {
         refetch();
-    }, [
-        search,
-        location,
-        env,
-        status,
-        power,
-        critical,
-        serverOwner,
-        createDateFrom,
-        createDateTo,
-        decommissionDateFrom,
-        decommissionDateTo,
-        terminatedDateFrom,
-        terminatedDateTo,
-        page,
-        limit,
-    ]);
+    }, [refetch]);
 
     useEffect(() => {
         setPage(1);
@@ -385,7 +385,7 @@ export default function DashboardPage() {
                         setSelected(updated);
                         refetch();
                     }}
-                    onDeleted={(id) => {
+                    onDeleted={() => {
                         setSelected(null);
                         refetch();
                     }}
