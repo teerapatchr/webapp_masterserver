@@ -64,7 +64,6 @@ const EXPORT_COL_SET = new Set(EXPORT_COLUMNS.map((c) => c.key));
 const csvEscape = (v) => {
   if (v === null || v === undefined) return "";
   const s = String(v);
-  // escape quotes and wrap if needed
   if (/[",\n\r]/.test(s)) return `"${s.replace(/"/g, '""')}"`;
   return s;
 };
@@ -296,6 +295,7 @@ app.get("/api/servers", async (req, res) => {
     addEq("critical_app", critical);
     addEq("pttep_server_owner", serverOwner);
 
+    // date range filters with validation
     if (createDateFrom) {
       params.push(String(createDateFrom));
       where += ` AND create_date IS NOT NULL
@@ -305,6 +305,7 @@ app.get("/api/servers", async (req, res) => {
       i++;
     }
 
+    // date range filters with validation
     if (createDateTo) {
       params.push(String(createDateTo));
       where += ` AND create_date IS NOT NULL
@@ -314,6 +315,7 @@ app.get("/api/servers", async (req, res) => {
       i++;
     }
 
+    // date range filters with validation
     if (decommissionDateFrom) {
       params.push(String(decommissionDateFrom));
       where += ` AND decommission_date IS NOT NULL
@@ -323,6 +325,7 @@ app.get("/api/servers", async (req, res) => {
       i++;
     }
 
+    // date range filters with validation
     if (decommissionDateTo) {
       params.push(String(decommissionDateTo));
       where += ` AND decommission_date IS NOT NULL
@@ -332,6 +335,7 @@ app.get("/api/servers", async (req, res) => {
       i++;
     }
 
+    // date range filters with validation
     if (terminatedDateFrom) {
       params.push(String(terminatedDateFrom));
       where += ` AND terminated_date IS NOT NULL
@@ -340,6 +344,7 @@ app.get("/api/servers", async (req, res) => {
              AND TO_DATE(TRIM(terminated_date), 'MM/DD/YYYY') >= $${i}`;
       i++;
     }
+
 
     if (terminatedDateTo) {
       params.push(String(terminatedDateTo));

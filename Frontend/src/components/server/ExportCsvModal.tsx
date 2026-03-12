@@ -41,7 +41,7 @@ export function ExportCsvModal({ open, onClose, filters }: Props) {
     React.useEffect(() => {
         if (!open) return;
 
-        // ✅ set defaults immediately so button isn't dead
+        // set defaults immediately so button isn't dead
         setSelected(
             new Set(["server_name", "ip_address", "application_name", "location", "system_environment"])
         );
@@ -51,7 +51,7 @@ export function ExportCsvModal({ open, onClose, filters }: Props) {
 
         (async () => {
             try {
-                // ✅ IMPORTANT: use your real backend base URL
+                // use your real backend base URL
                 const base = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:4000";
                 const res = await fetch(`${base}/api/servers/export-columns`);
 
@@ -90,9 +90,6 @@ export function ExportCsvModal({ open, onClose, filters }: Props) {
     const allFilteredSelected =
         allFilteredKeys.length > 0 &&
         allFilteredKeys.every((key) => selected.has(key));
-
-    const someFilteredSelected =
-        allFilteredKeys.some((key) => selected.has(key));
 
     const toggleSelectAllFiltered = (checked: boolean) => {
         setSelected((prev) => {

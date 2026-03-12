@@ -1,5 +1,4 @@
 "use client";
-
 import { useMemo, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -7,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { createServer } from "@/lib/server-api";
 import type { ServerDetail } from "@/lib/types";
 
+//Type to insert into database.
 type FormState = {
     id: string;
     server_name: string;
@@ -59,6 +59,7 @@ type FormState = {
     remark: string;
 };
 
+//Empty form state for reset and initialization. Adjust default values if your DB has NOT NULL constraints.
 const EMPTY: FormState = {
     id: "",
 

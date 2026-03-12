@@ -1,13 +1,9 @@
 "use client";
-
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ServerTable } from "@/components/server/ServerTable";
-import {
-    ServerFilters,
-    DEFAULT_VISIBLE_FILTERS,
-    type VisibleFilters,
-} from "@/components/server/ServerFilters";
+import { ServerFilters, DEFAULT_VISIBLE_FILTERS, type VisibleFilters } from "@/components/server/ServerFilters";
 import { ServerDetailsModal } from "@/components/server/ServerDetailsModal";
 import type { ServerDetail } from "@/lib/types";
 import { ExportCsvModal } from "@/components/server/ExportCsvModal";
@@ -46,11 +42,13 @@ export default function DashboardPage() {
     const [decommissionDateTo, setDecommissionDateTo] = useState("");
     const [terminatedDateFrom, setTerminatedDateFrom] = useState("");
     const [terminatedDateTo, setTerminatedDateTo] = useState("");
+    const router = useRouter();
 
     const [page, setPage] = useState(1);
     console.log("page =", page);
     const limit = 10;
 
+    //Set Page setting here
     const [meta, setMeta] = useState({
         page: 1,
         limit: 10,
@@ -60,6 +58,8 @@ export default function DashboardPage() {
         hasPrevPage: false,
     });
 
+
+    //Set Click Row to show details in Modal
     const handleRowClick = async (id: string) => {
         try {
             setOpen(true);        // open modal immediately
@@ -73,6 +73,7 @@ export default function DashboardPage() {
         }
     };
 
+    //Set Default Visible Columns here
     const DEFAULT_VISIBLE_COLUMNS: ColumnKey[] = [
         "server_name",
         "ip_address",
@@ -121,6 +122,21 @@ export default function DashboardPage() {
     );
 
     const [columnPickerOpen, setColumnPickerOpen] = useState(false);
+
+
+    //Logout function
+    const handleLogout = () => {
+        localStorage.removeItem("isLoggedIn");
+        router.push("/login");
+    };
+
+    //Login check on page load
+    useEffect(() => {
+        const isLoggedIn = localStorage.getItem("isLoggedIn");
+        if (isLoggedIn !== "true") {
+            router.push("/login");
+        }
+    }, [router]);
 
     useEffect(() => {
         try {
@@ -190,7 +206,6 @@ export default function DashboardPage() {
     }, [visibleFilters]);
 
     const handleVisibleFiltersChange = (next: VisibleFilters) => {
-        // Option B: when hidden => reset to ALL (no filtering)
         if (!next.location) setLocation("ALL");
         if (!next.env) setEnv("ALL");
         if (!next.status) setStatus("ALL");
@@ -256,6 +271,12 @@ export default function DashboardPage() {
                     <div className="h-10 w-10 rounded-full bg-muted" />
                 </div>
             </div>
+            <button
+                onClick={handleLogout}
+                className="rounded-md border px-3 py-2 text-sm font-medium hover:bg-muted"
+            >
+                Logout
+            </button>
 
             <ExportCsvModal
                 open={exportOpen}
@@ -315,6 +336,7 @@ export default function DashboardPage() {
                 onTerminatedDateToChange={setTerminatedDateTo}
             />
 
+
             {/* Count + Table */}
             <div className="space-y-2">
                 <ServerTable data={items} onRowClick={handleRowClick} visibleFilters={visibleFilters} visibleColumns={visibleColumns} />
@@ -345,6 +367,7 @@ export default function DashboardPage() {
                     </div>
                 </div>
 
+                {/*Add Server Modal*/}
                 <AddServerModal
                     open={addOpen}
                     onClose={() => setAddOpen(false)}
@@ -353,6 +376,7 @@ export default function DashboardPage() {
                     }}
                 />
 
+                {/*Server Details Modal*/}
                 <ServerDetailsModal
                     open={open}
                     onClose={() => setOpen(false)}
@@ -367,6 +391,7 @@ export default function DashboardPage() {
                     }}
                 />
 
+                {/*Column Picker Modal*/}
                 <Dialog open={columnPickerOpen} onOpenChange={setColumnPickerOpen}>
                     <DialogContent className="sm:max-w-lg">
                         <DialogHeader>
