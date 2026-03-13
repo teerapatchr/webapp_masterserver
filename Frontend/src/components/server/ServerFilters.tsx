@@ -36,7 +36,7 @@ export const DEFAULT_VISIBLE_FILTERS: VisibleFilters = {
     env: true,
     status: true,
     power: true,
-    critical: false,
+    critical: true,
     createDate: false,
     decommissionDate: false,
     terminatedDate: false,
@@ -199,8 +199,8 @@ export function ServerFilters(props: Props) {
                             </SelectTrigger>
                             <SelectContent>
                                 <SelectItem value="ALL">All States</SelectItem>
-                                <SelectItem value="Power On">On</SelectItem>
-                                <SelectItem value="Power Off">Off</SelectItem>
+                                <SelectItem value="Power On">Power On</SelectItem>
+                                <SelectItem value="Power Off">Power Off</SelectItem>
                             </SelectContent>
                         </Select>
                     </div>

@@ -29,9 +29,11 @@ jobs:
         run: npm ci
 
       - name: Run lint
-
-
         run: npm run lint --if-present
+
+      - name: Run tests
+        run: npm run test
+        working-directory: Frontend
 
       - name: Build frontend
         run: npm run build
