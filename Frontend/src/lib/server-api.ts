@@ -3,8 +3,37 @@ import type { ServerDetail } from "@/lib/types";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? "http://localhost:4000";
 
-export async function fetchServers(query: ServerListQuery): Promise<ServerListResponse> {
+export function buildServerQueryParams(query: ServerListQuery) {
   const params = new URLSearchParams();
+
+  if (query.q) params.set("q", query.q);
+  if (query.location && query.location !== "ALL") params.set("location", query.location);
+  if (query.env && query.env !== "ALL") params.set("env", query.env);
+  if (query.status && query.status !== "ALL") params.set("status", query.status);
+  if (query.power && query.power !== "ALL") params.set("power", query.power);
+  if (query.critical && query.critical !== "ALL") params.set("critical", query.critical);
+  if (query.serverOwner && query.serverOwner !== "ALL") params.set("serverOwner", query.serverOwner);
+
+  if (query.createDateFrom) params.set("createDateFrom", query.createDateFrom);
+  if (query.createDateTo) params.set("createDateTo", query.createDateTo);
+
+  if (query.decommissionDateFrom) params.set("decommissionDateFrom", query.decommissionDateFrom);
+  if (query.decommissionDateTo) params.set("decommissionDateTo", query.decommissionDateTo);
+
+  if (query.terminatedDateFrom) params.set("terminatedDateFrom", query.terminatedDateFrom);
+  if (query.terminatedDateTo) params.set("terminatedDateTo", query.terminatedDateTo);
+
+  params.set("page", String(query.page ?? 1));
+  params.set("limit", String(query.limit ?? 50));
+
+  if (query.sortBy) params.set("sortBy", query.sortBy);
+  if (query.sortDir) params.set("sortDir", query.sortDir);
+
+  return params;
+}
+
+export async function fetchServers(query: ServerListQuery): Promise<ServerListResponse> {
+  const params = buildServerQueryParams(query);
 
   if (query.q) params.set("q", query.q);
   if (query.location && query.location !== "ALL") params.set("location", query.location);
