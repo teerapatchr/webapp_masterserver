@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { updateServer } from "../server-api";
+import { updateServer } from "../../server-api";
 
 vi.stubGlobal("fetch", vi.fn());
 
