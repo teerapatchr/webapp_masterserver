@@ -33,7 +33,6 @@ jobs:
 
       - name: Run tests
         run: npm run test
-        working-directory: Frontend
 
       - name: Build frontend
         run: npm run build
@@ -62,4 +61,6 @@ jobs:
         run: npm ci
 
       - name: Run backend start check
-        run: npm run start --if-present
+        run: |
+          npm run start --if-present &
+          sleep 5

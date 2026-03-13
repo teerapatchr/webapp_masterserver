@@ -45,7 +45,6 @@ export default function DashboardPage() {
     const router = useRouter();
 
     const [page, setPage] = useState(1);
-    console.log("page =", page);
     const limit = 10;
 
     //Set Page setting here
