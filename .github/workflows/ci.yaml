@@ -42,8 +42,8 @@ jobs:
         env:
           NEXT_PUBLIC_API_BASE: http://localhost:4000
       
-      - name: Build frontend image
-        run: docker build -t frontend-test ./App/Frontend
+      # - name: Build frontend image
+      #   run: docker build -t frontend-test ./App/Frontend
 
   backend:
     name: Backend Check
@@ -77,6 +77,25 @@ jobs:
       - name: Debug folders
         run: ls -R
 
-      - name: Build backend image
-        run: docker build -t backend-test ./App/Backend
+      # - name: Build backend image
+      #   run: docker build -t backend-test ./App/Backend
+
+  docker-build:
+  name: Docker Build Check
+  runs-on: ubuntu-latest
+
+  steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Show folders
+      run: |
+        pwd
+        find . -maxdepth 3 -type d
+
+    - name: Build frontend image
+      run: docker build -t frontend-test -f ./Frontend/Dockerfile ./Frontend
+
+    - name: Build backend image
+      run: docker build -t backend-test -f ./Backend/Dockerfile ./Backend
 
