@@ -60,6 +60,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Run backend lint
+        run: npm run lint --if-present
+
       - name: Run backend start check
         run: |
           npm run start --if-present &
