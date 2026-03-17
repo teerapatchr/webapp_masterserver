@@ -1,10 +1,10 @@
-name: Full Stack CI
+name: CI
 
 on:
   push:
-    branches: [main, master]
+    branches: [main, dev]
   pull_request:
-    branches: [main, master]
+    branches: [main, dev]
 
 jobs:
   frontend:
@@ -34,16 +34,10 @@ jobs:
       - name: Run tests
         run: npm run test
 
-      - name: Debug folders
-        run: ls -R
-
       - name: Build frontend
         run: npm run build
         env:
           NEXT_PUBLIC_API_BASE: http://localhost:4000
-      
-      # - name: Build frontend image
-      #   run: docker build -t frontend-test ./App/Frontend
 
   backend:
     name: Backend Check
@@ -74,12 +68,6 @@ jobs:
           npm run start --if-present &
           sleep 5
 
-      - name: Debug folders
-        run: ls -R
-
-      # - name: Build backend image
-      #   run: docker build -t backend-test ./App/Backend
-
   docker-build:
     name: Docker Build Check
     runs-on: ubuntu-latest
@@ -88,14 +76,8 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Show folders
-        run: |
-          pwd
-          find . -maxdepth 3 -type d
-
       - name: Build frontend image
         run: docker build -t frontend-test -f ./Frontend/Dockerfile ./Frontend
 
       - name: Build backend image
         run: docker build -t backend-test -f ./Backend/Dockerfile ./Backend
-
