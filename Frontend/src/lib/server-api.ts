@@ -1,7 +1,7 @@
 import type { ServerListQuery, ServerListResponse } from "@/lib/api-types";
 import type { ServerDetail } from "@/lib/types";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? "http://localhost:4000";
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? "";
 
 export function buildServerQueryParams(query: ServerListQuery) {
   const params = new URLSearchParams();
@@ -74,7 +74,7 @@ export async function fetchServers(query: ServerListQuery): Promise<ServerListRe
 }
 
 export async function fetchServerDetail(id: string): Promise<ServerDetail> {
-  const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? "http://localhost:4000";
+  const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? "";
 
   const res = await fetch(`${API_BASE}/api/servers/${id}`, {
     cache: "no-store",
@@ -109,7 +109,7 @@ export async function deleteServer(id: string): Promise<{ ok: true; id: string }
 
 //Add server 
 export async function createServer(payload: Partial<ServerDetail>): Promise<ServerDetail> {
-  const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? "http://localhost:4000";
+  const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? "";
 
   const res = await fetch(`${API_BASE}/api/servers`, {
     method: "POST",
