@@ -4,8 +4,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
+import { buildExportCsvUrl, fetchExportColumns, type ExportCol } from "@/lib/server-api";
 
-type ExportCol = { key: string; label: string; group: string };
 
 type Props = {
     open: boolean;
