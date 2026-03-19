@@ -4,9 +4,6 @@ on:
   push:
     branches: [main]
 
-  merge_group:
-    branches: [main]
-
 jobs:
   docker-push:
     name: Build and Push Docker Images
@@ -28,7 +25,7 @@ jobs:
           context: ./Frontend
           file: ./Frontend/Dockerfile
           push: true
-          tags: YOUR_DOCKERHUB_USERNAME/serverinventory-frontend:latest
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/serverinventory-frontend:latest
 
       - name: Build and push backend image
         uses: docker/build-push-action@v6
@@ -36,4 +33,4 @@ jobs:
           context: ./Backend
           file: ./Backend/Dockerfile
           push: true
-          tags: YOUR_DOCKERHUB_USERNAME/serverinventory-backend:latest
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/serverinventory-backend:latest

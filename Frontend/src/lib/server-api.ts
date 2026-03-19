@@ -1,7 +1,115 @@
 import type { ServerListQuery, ServerListResponse } from "@/lib/api-types";
 import type { ServerDetail } from "@/lib/types";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? "http://localhost:4000";
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? "";
+const defaultHeaders: HeadersInit = API_BASE.includes("ngrok")
+  ? { "ngrok-skip-browser-warning": "true" }
+  : {};
+
+export type ExportCol = {
+  key: string;
+  label: string;
+  group: string;
+};
+
+type ExportCsvQuery = {
+  q?: string;
+  location?: string;
+  env?: string;
+  status?: string;
+  power?: string;
+  critical?: string;
+  serverOwner?: string;
+  createDateFrom?: string;
+  createDateTo?: string;
+  decommissionDateFrom?: string;
+  decommissionDateTo?: string;
+  terminatedDateFrom?: string;
+  terminatedDateTo?: string;
+};
+
+export async function fetchExportColumns(): Promise<ExportCol[]> {
+  const res = await fetch(`${API_BASE}/api/servers/export-columns`, {
+    cache: "no-store",
+    headers: defaultHeaders,
+  });
+
+  if (!res.ok) {
+    let details = "";
+    try {
+      details = await res.text();
+    } catch { }
+    throw new Error(`fetchExportColumns failed: ${res.status} ${details}`);
+  }
+
+  const data = await res.json();
+  if (!Array.isArray(data)) {
+    throw new Error("export-columns did not return an array");
+  }
+
+  return data;
+}
+
+// export function buildExportCsvUrl(
+//   filters: ExportCsvQuery,
+//   selectedColumns: string[]
+// ) {
+//   const params = new URLSearchParams({
+//     q: filters.q ?? "",
+//     location: filters.location ?? "ALL",
+//     env: filters.env ?? "ALL",
+//     status: filters.status ?? "ALL",
+//     power: filters.power ?? "ALL",
+//     critical: filters.critical ?? "ALL",
+//     serverOwner: filters.serverOwner ?? "ALL",
+//     createDateFrom: filters.createDateFrom ?? "",
+//     createDateTo: filters.createDateTo ?? "",
+//     decommissionDateFrom: filters.decommissionDateFrom ?? "",
+//     decommissionDateTo: filters.decommissionDateTo ?? "",
+//     terminatedDateFrom: filters.terminatedDateFrom ?? "",
+//     terminatedDateTo: filters.terminatedDateTo ?? "",
+//     columns: selectedColumns.join(","),
+//   });
+
+//   return `${API_BASE}/api/servers/export?${params.toString()}`;
+// }
+
+export async function exportServersCsv(
+  filters: ExportCsvQuery,
+  selectedColumns: string[]
+): Promise<Blob> {
+  const params = new URLSearchParams({
+    q: filters.q ?? "",
+    location: filters.location ?? "ALL",
+    env: filters.env ?? "ALL",
+    status: filters.status ?? "ALL",
+    power: filters.power ?? "ALL",
+    critical: filters.critical ?? "ALL",
+    serverOwner: filters.serverOwner ?? "ALL",
+    createDateFrom: filters.createDateFrom ?? "",
+    createDateTo: filters.createDateTo ?? "",
+    decommissionDateFrom: filters.decommissionDateFrom ?? "",
+    decommissionDateTo: filters.decommissionDateTo ?? "",
+    terminatedDateFrom: filters.terminatedDateFrom ?? "",
+    terminatedDateTo: filters.terminatedDateTo ?? "",
+    columns: selectedColumns.join(","),
+  });
+
+  const res = await fetch(`${API_BASE}/api/servers/export?${params.toString()}`, {
+    cache: "no-store",
+    headers: defaultHeaders,
+  });
+
+  if (!res.ok) {
+    let details = "";
+    try {
+      details = await res.text();
+    } catch { }
+    throw new Error(`exportServersCsv failed: ${res.status} ${details}`);
+  }
+
+  return res.blob();
+}
 
 export function buildServerQueryParams(query: ServerListQuery) {
   const params = new URLSearchParams();
@@ -60,6 +168,7 @@ export async function fetchServers(query: ServerListQuery): Promise<ServerListRe
 
   const res = await fetch(`${API_BASE}/api/servers?${params.toString()}`, {
     cache: "no-store",
+    headers: defaultHeaders,
   });
 
   if (!res.ok) {
@@ -74,10 +183,9 @@ export async function fetchServers(query: ServerListQuery): Promise<ServerListRe
 }
 
 export async function fetchServerDetail(id: string): Promise<ServerDetail> {
-  const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? "http://localhost:4000";
-
   const res = await fetch(`${API_BASE}/api/servers/${id}`, {
     cache: "no-store",
+    headers: defaultHeaders,
   });
 
   if (!res.ok) {
@@ -92,7 +200,10 @@ export async function fetchServerDetail(id: string): Promise<ServerDetail> {
 export async function updateServer(id: string, patch: Partial<ServerDetail>): Promise<ServerDetail> {
   const res = await fetch(`${API_BASE}/api/servers/${id}`, {
     method: "PUT",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      ...defaultHeaders,
+    },
     body: JSON.stringify(patch),
   });
   if (!res.ok) throw new Error(`updateServer failed: ${res.status}`);
@@ -102,6 +213,7 @@ export async function updateServer(id: string, patch: Partial<ServerDetail>): Pr
 export async function deleteServer(id: string): Promise<{ ok: true; id: string }> {
   const res = await fetch(`${API_BASE}/api/servers/${id}`, {
     method: "DELETE",
+    headers: defaultHeaders,
   });
   if (!res.ok) throw new Error(`deleteServer failed: ${res.status}`);
   return res.json();
@@ -109,14 +221,17 @@ export async function deleteServer(id: string): Promise<{ ok: true; id: string }
 
 //Add server 
 export async function createServer(payload: Partial<ServerDetail>): Promise<ServerDetail> {
-  const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? "http://localhost:4000";
-
   const res = await fetch(`${API_BASE}/api/servers`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      ...defaultHeaders,
+    },
     body: JSON.stringify(payload),
   });
+
 
   if (!res.ok) throw new Error(`createServer failed: ${res.status}`);
   return res.json();
 }
+

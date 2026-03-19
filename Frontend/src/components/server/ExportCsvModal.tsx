@@ -4,8 +4,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
+import { exportServersCsv, fetchExportColumns, type ExportCol } from "@/lib/server-api";
 
-type ExportCol = { key: string; label: string; group: string };
 
 type Props = {
     open: boolean;
@@ -50,15 +50,7 @@ export function ExportCsvModal({ open, onClose, filters }: Props) {
 
         (async () => {
             try {
-                // use your real backend base URL
-                const base = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:4000";
-                const res = await fetch(`${base}/api/servers/export-columns`);
-
-                const data = await res.json();
-                if (!Array.isArray(data)) {
-                    throw new Error(typeof data?.error === "string" ? data.error : "export-columns did not return an array");
-                }
-
+                const data = await fetchExportColumns();
                 setCols(data);
             } catch (err: unknown) {
                 setCols([]);
@@ -106,31 +98,21 @@ export function ExportCsvModal({ open, onClose, filters }: Props) {
         });
     };
 
+
     const clearAll = () => setSelected(new Set());
 
-    const exportNow = () => {
-        const columns = Array.from(selected).join(",");
+    const exportNow = async () => {
+        const blob = await exportServersCsv(filters, Array.from(selected));
 
-        const params = new URLSearchParams({
-            q: filters.q ?? "",
-            location: filters.location ?? "ALL",
-            env: filters.env ?? "ALL",
-            status: filters.status ?? "ALL",
-            power: filters.power ?? "ALL",
-            critical: filters.critical ?? "ALL",
-            serverOwner: filters.serverOwner ?? "ALL",
-            createDateFrom: filters.createDateFrom ?? "",
-            createDateTo: filters.createDateTo ?? "",
-            decommissionDateFrom: filters.decommissionDateFrom ?? "",
-            decommissionDateTo: filters.decommissionDateTo ?? "",
-            terminatedDateFrom: filters.terminatedDateFrom ?? "",
-            terminatedDateTo: filters.terminatedDateTo ?? "",
-            columns,
-        });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "servers-export.csv";
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        window.URL.revokeObjectURL(url);
 
-        // trigger download
-        const base = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:4000";
-        window.location.href = `${base}/api/servers/export?${params.toString()}`;
         onClose();
     };
 
@@ -153,11 +135,13 @@ export function ExportCsvModal({ open, onClose, filters }: Props) {
                         Exports ALL rows that match current filters (not just this page).
                     </div>
 
+
                     <Input
                         placeholder="Search columns…"
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                     />
+
 
                     {loadingCols && (
                         <div className="text-sm text-muted-foreground">Loading columns...</div>
