@@ -106,6 +106,7 @@ export function ExportCsvModal({ open, onClose, filters }: Props) {
         });
     };
 
+
     const clearAll = () => setSelected(new Set());
 
     const exportNow = () => {
@@ -153,11 +154,13 @@ export function ExportCsvModal({ open, onClose, filters }: Props) {
                         Exports ALL rows that match current filters (not just this page).
                     </div>
 
+
                     <Input
                         placeholder="Search columns…"
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                     />
+
 
                     {loadingCols && (
                         <div className="text-sm text-muted-foreground">Loading columns...</div>
