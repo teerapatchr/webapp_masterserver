@@ -50,7 +50,15 @@ export function ExportCsvModal({ open, onClose, filters }: Props) {
 
         (async () => {
             try {
-                const data = await fetchExportColumns();
+                // use your real backend base URL
+                const base = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:4000";
+                const res = await fetch(`${base}/api/servers/export-columns`);
+
+                const data = await res.json();
+                if (!Array.isArray(data)) {
+                    throw new Error(typeof data?.error === "string" ? data.error : "export-columns did not return an array");
+                }
+
                 setCols(data);
             } catch (err: unknown) {
                 setCols([]);
@@ -101,8 +109,28 @@ export function ExportCsvModal({ open, onClose, filters }: Props) {
     const clearAll = () => setSelected(new Set());
 
     const exportNow = () => {
-        const url = buildExportCsvUrl(filters, Array.from(selected));
-        window.location.href = url;
+        const columns = Array.from(selected).join(",");
+
+        const params = new URLSearchParams({
+            q: filters.q ?? "",
+            location: filters.location ?? "ALL",
+            env: filters.env ?? "ALL",
+            status: filters.status ?? "ALL",
+            power: filters.power ?? "ALL",
+            critical: filters.critical ?? "ALL",
+            serverOwner: filters.serverOwner ?? "ALL",
+            createDateFrom: filters.createDateFrom ?? "",
+            createDateTo: filters.createDateTo ?? "",
+            decommissionDateFrom: filters.decommissionDateFrom ?? "",
+            decommissionDateTo: filters.decommissionDateTo ?? "",
+            terminatedDateFrom: filters.terminatedDateFrom ?? "",
+            terminatedDateTo: filters.terminatedDateTo ?? "",
+            columns,
+        });
+
+        // trigger download
+        const base = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:4000";
+        window.location.href = `${base}/api/servers/export?${params.toString()}`;
         onClose();
     };
 
