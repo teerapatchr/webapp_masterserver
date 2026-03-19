@@ -51,7 +51,7 @@ export function ExportCsvModal({ open, onClose, filters }: Props) {
         (async () => {
             try {
                 // use your real backend base URL
-                const base = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:4000";
+                const base = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:4000";
                 const res = await fetch(`${base}/api/servers/export-columns`);
 
                 const data = await res.json();
@@ -129,7 +129,7 @@ export function ExportCsvModal({ open, onClose, filters }: Props) {
         });
 
         // trigger download
-        const base = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:4000";
+        const base = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:4000";
         window.location.href = `${base}/api/servers/export?${params.toString()}`;
         onClose();
     };
