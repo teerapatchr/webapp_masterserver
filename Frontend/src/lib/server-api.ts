@@ -193,6 +193,7 @@ export async function createServer(payload: Partial<ServerDetail>): Promise<Serv
     body: JSON.stringify(payload),
   });
 
+
   if (!res.ok) throw new Error(`createServer failed: ${res.status}`);
   return res.json();
 }
