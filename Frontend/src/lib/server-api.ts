@@ -50,10 +50,34 @@ export async function fetchExportColumns(): Promise<ExportCol[]> {
   return data;
 }
 
-export function buildExportCsvUrl(
+// export function buildExportCsvUrl(
+//   filters: ExportCsvQuery,
+//   selectedColumns: string[]
+// ) {
+//   const params = new URLSearchParams({
+//     q: filters.q ?? "",
+//     location: filters.location ?? "ALL",
+//     env: filters.env ?? "ALL",
+//     status: filters.status ?? "ALL",
+//     power: filters.power ?? "ALL",
+//     critical: filters.critical ?? "ALL",
+//     serverOwner: filters.serverOwner ?? "ALL",
+//     createDateFrom: filters.createDateFrom ?? "",
+//     createDateTo: filters.createDateTo ?? "",
+//     decommissionDateFrom: filters.decommissionDateFrom ?? "",
+//     decommissionDateTo: filters.decommissionDateTo ?? "",
+//     terminatedDateFrom: filters.terminatedDateFrom ?? "",
+//     terminatedDateTo: filters.terminatedDateTo ?? "",
+//     columns: selectedColumns.join(","),
+//   });
+
+//   return `${API_BASE}/api/servers/export?${params.toString()}`;
+// }
+
+export async function exportServersCsv(
   filters: ExportCsvQuery,
   selectedColumns: string[]
-) {
+): Promise<Blob> {
   const params = new URLSearchParams({
     q: filters.q ?? "",
     location: filters.location ?? "ALL",
@@ -71,7 +95,20 @@ export function buildExportCsvUrl(
     columns: selectedColumns.join(","),
   });
 
-  return `${API_BASE}/api/servers/export?${params.toString()}`;
+  const res = await fetch(`${API_BASE}/api/servers/export?${params.toString()}`, {
+    cache: "no-store",
+    headers: defaultHeaders,
+  });
+
+  if (!res.ok) {
+    let details = "";
+    try {
+      details = await res.text();
+    } catch { }
+    throw new Error(`exportServersCsv failed: ${res.status} ${details}`);
+  }
+
+  return res.blob();
 }
 
 export function buildServerQueryParams(query: ServerListQuery) {

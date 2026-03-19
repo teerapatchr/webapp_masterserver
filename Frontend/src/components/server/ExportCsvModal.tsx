@@ -4,7 +4,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
-import { buildExportCsvUrl, fetchExportColumns, type ExportCol } from "@/lib/server-api";
+import { exportServersCsv, fetchExportColumns, type ExportCol } from "@/lib/server-api";
 
 
 type Props = {
@@ -101,9 +101,18 @@ export function ExportCsvModal({ open, onClose, filters }: Props) {
 
     const clearAll = () => setSelected(new Set());
 
-    const exportNow = () => {
-        const url = buildExportCsvUrl(filters, Array.from(selected));
-        window.location.href = url;
+    const exportNow = async () => {
+        const blob = await exportServersCsv(filters, Array.from(selected));
+
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "servers-export.csv";
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        window.URL.revokeObjectURL(url);
+
         onClose();
     };
 
