@@ -6,6 +6,7 @@ const defaultHeaders: HeadersInit = API_BASE.includes("ngrok")
   ? { "ngrok-skip-browser-warning": "true" }
   : {};
 
+
 export type ExportCol = {
   key: string;
   label: string;
@@ -28,6 +29,7 @@ type ExportCsvQuery = {
   terminatedDateTo?: string;
 };
 
+//Fetch server export columns for CSV export modal
 export async function fetchExportColumns(): Promise<ExportCol[]> {
   const res = await fetch(`${API_BASE}/api/servers/export-columns`, {
     cache: "no-store",
@@ -50,30 +52,7 @@ export async function fetchExportColumns(): Promise<ExportCol[]> {
   return data;
 }
 
-// export function buildExportCsvUrl(
-//   filters: ExportCsvQuery,
-//   selectedColumns: string[]
-// ) {
-//   const params = new URLSearchParams({
-//     q: filters.q ?? "",
-//     location: filters.location ?? "ALL",
-//     env: filters.env ?? "ALL",
-//     status: filters.status ?? "ALL",
-//     power: filters.power ?? "ALL",
-//     critical: filters.critical ?? "ALL",
-//     serverOwner: filters.serverOwner ?? "ALL",
-//     createDateFrom: filters.createDateFrom ?? "",
-//     createDateTo: filters.createDateTo ?? "",
-//     decommissionDateFrom: filters.decommissionDateFrom ?? "",
-//     decommissionDateTo: filters.decommissionDateTo ?? "",
-//     terminatedDateFrom: filters.terminatedDateFrom ?? "",
-//     terminatedDateTo: filters.terminatedDateTo ?? "",
-//     columns: selectedColumns.join(","),
-//   });
-
-//   return `${API_BASE}/api/servers/export?${params.toString()}`;
-// }
-
+//Export servers as CSV based on filters and selected columns
 export async function exportServersCsv(
   filters: ExportCsvQuery,
   selectedColumns: string[]
@@ -111,6 +90,7 @@ export async function exportServersCsv(
   return res.blob();
 }
 
+//Build query params for server list API based on filters, pagination, sorting
 export function buildServerQueryParams(query: ServerListQuery) {
   const params = new URLSearchParams();
 
@@ -140,6 +120,7 @@ export function buildServerQueryParams(query: ServerListQuery) {
   return params;
 }
 
+//Fetch server list with filters, pagination, sorting
 export async function fetchServers(query: ServerListQuery): Promise<ServerListResponse> {
   const params = buildServerQueryParams(query);
 
@@ -181,7 +162,7 @@ export async function fetchServers(query: ServerListQuery): Promise<ServerListRe
 
   return res.json();
 }
-
+//Fetch server detail
 export async function fetchServerDetail(id: string): Promise<ServerDetail> {
   const res = await fetch(`${API_BASE}/api/servers/${id}`, {
     cache: "no-store",
@@ -196,7 +177,7 @@ export async function fetchServerDetail(id: string): Promise<ServerDetail> {
 }
 
 
-//Edit and Delete
+//Edit server
 export async function updateServer(id: string, patch: Partial<ServerDetail>): Promise<ServerDetail> {
   const res = await fetch(`${API_BASE}/api/servers/${id}`, {
     method: "PUT",
@@ -210,6 +191,7 @@ export async function updateServer(id: string, patch: Partial<ServerDetail>): Pr
   return res.json();
 }
 
+//Delete server
 export async function deleteServer(id: string): Promise<{ ok: true; id: string }> {
   const res = await fetch(`${API_BASE}/api/servers/${id}`, {
     method: "DELETE",
