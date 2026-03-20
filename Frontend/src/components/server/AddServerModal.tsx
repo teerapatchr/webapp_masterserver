@@ -10,6 +10,7 @@ import {
     STATUS_OPTIONS,
     YES_NO_OPTIONS,
     ENV_OPTIONS,
+    LOCATION_OPTIONS,
 } from "./add-server-component/config";
 import { Section, Field, SelectField } from "./add-server-component/fields";
 import { useAddServerForm } from "./add-server-component/useAddServerForm";
@@ -58,7 +59,7 @@ export function AddServerModal({
                 </DialogHeader>
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 flex-1 pr-2">
                     <div className="space-y-4">
-                        <Section title="Identity (Required)">
+                        <Section title="Identity">
                             <Field
                                 label="Server Name"
                                 value={form.server_name}
@@ -67,16 +68,17 @@ export function AddServerModal({
                                 required
                             />
                             <Field label="IP Address" value={form.ip_address} onChange={setField("ip_address")} placeholder="e.g. 10.10.10.10" required />
-                            <Field label="DNS Name" value={form.dns_name} onChange={setField("dns_name")} placeholder="optional" />
+                            <Field label="DNS Name" value={form.dns_name} onChange={setField("dns_name")} placeholder="optional" required />
                         </Section>
 
-                        <Section title="Operations (Required)">
+                        <Section title="Operations">
                             <SelectField
                                 label="Power State"
                                 value={form.power_state}
                                 onValueChange={setSelectField("power_state")}
                                 placeholder="Select power state"
                                 options={POWER_STATE_OPTIONS}
+                                required
                             />
                             <SelectField
                                 label="Status"
@@ -84,6 +86,7 @@ export function AddServerModal({
                                 onValueChange={setSelectField("status")}
                                 placeholder="Select status"
                                 options={STATUS_OPTIONS}
+                                required
                             />
                             <SelectField
                                 label="Critical App"
@@ -91,17 +94,26 @@ export function AddServerModal({
                                 onValueChange={setSelectField("critical_app")}
                                 placeholder="Select yes or no"
                                 options={YES_NO_OPTIONS}
+                                required
                             />
                             <Field
                                 label="Create Date"
                                 value={form.create_date}
                                 onChange={setDateField("create_date")}
                                 type="date"
+                                required
                             />
                         </Section>
 
-                        <Section title="Location (Required)">
-                            <Field label="Location" value={form.location} onChange={setField("location")} placeholder='e.g. "HQ"' />
+                        <Section title="Location">
+                            <SelectField
+                                label="Location"
+                                value={form.location}
+                                onValueChange={setSelectField("location")}
+                                placeholder='e.g. "HQ"'
+                                options={LOCATION_OPTIONS}
+                                required
+                            />
                             <Field label="Zone LV" value={form.zone_lv} onChange={setField("zone_lv")} placeholder="optional" />
                         </Section>
                     </div>
@@ -109,13 +121,14 @@ export function AddServerModal({
                     {/* RIGHT: Application + Spec + Support */}
                     <div className="space-y-4">
                         <Section title="Application / Environment">
-                            <Field label="Application Name" value={form.application_name} onChange={setField("application_name")} placeholder="optional" />
+                            <Field label="Application Name" value={form.application_name} onChange={setField("application_name")} placeholder="optional" required />
                             <SelectField
-                                label="System Environment (Required)"
+                                label="System Environment"
                                 value={form.system_environment}
                                 onValueChange={setSelectField("system_environment")}
                                 placeholder="Select environment"
                                 options={ENV_OPTIONS}
+                                required
                             />
                             <Field label="Function" value={form.function} onChange={setField("function")} placeholder="optional" />
                         </Section>
@@ -129,12 +142,13 @@ export function AddServerModal({
                             <Field label="Disk" value={form.disk} onChange={setField("disk")} placeholder="optional" />
                         </Section>
 
-                        <Section title="Ownership / Support (Required owner)">
+                        <Section title="Ownership / Support">
                             <Field
-                                label="PTTEP Server Owner (Required)"
+                                label="PTTEP Server Owner"
                                 value={form.pttep_server_owner}
                                 onChange={setField("pttep_server_owner")}
                                 placeholder="e.g. IT Infrastructure Team"
+                                required
                             />
                             <Field label="PTTEP Application Owner" value={form.pttep_application_owner} onChange={setField("pttep_application_owner")} placeholder="optional" />
                             <Field
@@ -224,12 +238,6 @@ export function AddServerModal({
                         {saving ? "Creating..." : "Create"}
                     </Button>
                 </div>
-
-                {!requiredOk && (
-                    <div className="text-xs text-muted-foreground pt-2">
-                        Fill required fields: Server Name, IP, Location, Environment, Status, Power State, Critical App, PTTEP Server Owner
-                    </div>
-                )}
             </DialogContent>
         </Dialog>
     );

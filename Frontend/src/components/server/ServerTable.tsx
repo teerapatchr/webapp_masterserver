@@ -4,16 +4,12 @@ import { useVirtualizer } from "@tanstack/react-virtual";
 import { Badge } from "@/components/ui/badge";
 import type { ServerInventory } from "@/lib/types";
 
-// Change color of the dot and text based on power state.
 function PowerDot({ state }: { state: string }) {
     const s = (state ?? "").toLowerCase();
-
     const isOn = s.includes("on");
     const isOff = s.includes("off");
-
     let dotColor = "bg-slate-400";
     let textColor = "text-slate-700";
-
     if (isOn) {
         dotColor = "bg-green-500";
         textColor = "text-green-600";
@@ -21,7 +17,6 @@ function PowerDot({ state }: { state: string }) {
         dotColor = "bg-red-500";
         textColor = "text-red-600";
     }
-
     return (
         <div className="flex items-center gap-2">
             <span className={`h-3 w-3 rounded-full ${dotColor}`} />
