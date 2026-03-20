@@ -56,10 +56,7 @@ export function AddServerModal({
                 <DialogHeader>
                     <DialogTitle>Add Server</DialogTitle>
                 </DialogHeader>
-
-                {/* Enterprise layout: 2 columns on large screens */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 flex-1 pr-2">
-                    {/* LEFT: Identity + Runtime */}
                     <div className="space-y-4">
                         <Section title="Identity (Required)">
                             <Field
@@ -186,7 +183,13 @@ export function AddServerModal({
                         <Section title="Maintenance / DR">
                             <Field label="Update Patch Project" value={form.update_patch_project} onChange={setField("update_patch_project")} placeholder="optional" />
                             <Field label="Veritas Backup" value={form.veritas_backup} onChange={setField("veritas_backup")} placeholder="optional" />
-                            <Field label="Test DR" value={form.test_dr} onChange={setField("test_dr")} placeholder="optional" />
+                            <SelectField
+                                label="Test DR"
+                                value={form.test_dr}
+                                onValueChange={setSelectField("test_dr")}
+                                placeholder="Select yes or no"
+                                options={YES_NO_OPTIONS}
+                            />
                         </Section>
 
                         <Section title="Request / Ticket / Remark">
