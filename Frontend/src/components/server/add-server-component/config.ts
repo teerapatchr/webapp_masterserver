@@ -6,6 +6,8 @@ export const YES_NO_OPTIONS = ["Yes", "No"];
 export const ENV_OPTIONS = ["POC", "Test", "DEV", "QAS", "UAT", "PRD", "Other"];
 export const REQUEST_CHANNEL_OPTIONS = ["Promopcare", "Dcloud", "Oneclick", "Email", "CQR", "Other"];
 export const LOCATION_OPTIONS = ["HQ", "OC", "Azure", "ART", "SKL", "LKU", "SPH", "SRC", "MLD", "RGN", "ZPQ", "ZOC", "YDNRGN", "YDNYAD", "YDNPLC", "PSRC", "Other"];
+export const FUNCTION_OPTIONS = ["Application", "Web Apps", "DB"];
+export const VERITAS_BACKUP_OPTIONS = ["Dailly", "5y", "10y", "No"];
 
 export const REQUIRED_FIELDS: (keyof FormState)[] = [
     "server_name",

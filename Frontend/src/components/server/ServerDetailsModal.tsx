@@ -5,7 +5,22 @@ import type { ServerDetail } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { updateServer, deleteServer } from "@/lib/server-api";
-
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
+import {
+    POWER_STATE_OPTIONS,
+    STATUS_OPTIONS,
+    YES_NO_OPTIONS,
+    ENV_OPTIONS,
+    LOCATION_OPTIONS,
+    FUNCTION_OPTIONS,
+    VERITAS_BACKUP_OPTIONS,
+} from "./add-server-component/config";
 
 type Props = {
     open: boolean;
@@ -24,20 +39,10 @@ export function ServerDetailsModal({ open, onClose, server, onUpdated, onDeleted
     const [saving, setSaving] = useState(false);
     const [deleting, setDeleting] = useState(false);
 
-    // which fields are editable in edit mode? (not all fields are editable)
-    const editableKeys = new Set<keyof ServerDetail>([
-        "server_name",
-        "ip_address",
-        "dns_name",
-        "application_name",
-        "location",
-        "system_environment",
-        "status",
-        "power_state",
-        "critical_app",
-        "pttep_server_owner",
-        "pttep_application_owner",
-        "remark",
+    // which fields are Readonly even in edit mode.
+    const readOnlyKeys = new Set<keyof ServerDetail>([
+        "id",
+        "decom_duration_days",
     ]);
 
 
@@ -187,9 +192,10 @@ export function ServerDetailsModal({ open, onClose, server, onUpdated, onDeleted
                                 {section.fields.map((f) => (
                                     <Row
                                         key={String(f.key)}
+                                        fieldKey={f.key}
                                         label={f.label}
                                         value={String(form?.[f.key as keyof typeof form] ?? "")}
-                                        editable={editMode && editableKeys.has(f.key)}
+                                        editable={editMode && !readOnlyKeys.has(f.key)}
                                         onChange={(v) => setField(f.key, v)}
                                     />
                                 ))}
@@ -236,27 +242,91 @@ export function ServerDetailsModal({ open, onClose, server, onUpdated, onDeleted
     );
 }
 
+
 function Row({
+    fieldKey,
     label,
     value,
     editable,
     onChange,
 }: {
+    fieldKey: keyof ServerDetail;
     label: string;
     value?: string;
     editable?: boolean;
     onChange?: (v: string) => void;
 }) {
     const shown = value && value.trim() !== "" ? value : "";
+
+    const getSelectOptions = (key: keyof ServerDetail): string[] | null => {
+        switch (key) {
+            case "power_state":
+                return POWER_STATE_OPTIONS;
+            case "status":
+                return STATUS_OPTIONS;
+            case "critical_app":
+                return YES_NO_OPTIONS;
+            case "system_environment":
+                return ENV_OPTIONS;
+            case "need_terminate_process":
+                return YES_NO_OPTIONS;
+            case "update_patch_project":
+                return YES_NO_OPTIONS;
+            case "test_dr":
+                return YES_NO_OPTIONS;
+            case "location":
+                return LOCATION_OPTIONS;
+            case "function":
+                return FUNCTION_OPTIONS;
+            case "veritas_backup":
+                return VERITAS_BACKUP_OPTIONS;
+            default:
+                return null;
+        }
+    };
+
+    const isDateField =
+        fieldKey === "create_date" ||
+        fieldKey === "decommission_date" ||
+        fieldKey === "terminated_date";
+
+    const options = getSelectOptions(fieldKey);
+
     return (
         <div className="grid grid-cols-3 gap-4 px-4 py-3 border-b last:border-b-0 items-center">
             <div className="text-sm font-medium text-muted-foreground">{label}</div>
             <div className="col-span-2">
                 {editable ? (
-                    <Input value={shown} onChange={(e) => onChange?.(e.target.value)} />
+                    options ? (
+                        <Select
+                            value={shown || undefined}
+                            onValueChange={(v) => onChange?.(v)}
+                        >
+                            <SelectTrigger className="w-full">
+                                <SelectValue placeholder="Select option" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {options.map((option) => (
+                                    <SelectItem key={option} value={option}>
+                                        {option}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    ) : isDateField ? (
+                        <Input
+                            type="date"
+                            value={shown}
+                            onChange={(e) => onChange?.(e.target.value)}
+                        />
+                    ) : (
+                        <Input
+                            value={shown}
+                            onChange={(e) => onChange?.(e.target.value)}
+                        />
+                    )
                 ) : (
-                    <div className="text-sm break-words">{shown || "-"}
-                    </div>
+                    <div className="text-sm break-words">{shown || "-"}</div>
                 )}
             </div>
         </div>

@@ -11,6 +11,8 @@ import {
     YES_NO_OPTIONS,
     ENV_OPTIONS,
     LOCATION_OPTIONS,
+    FUNCTION_OPTIONS,
+    VERITAS_BACKUP_OPTIONS,
 } from "./add-server-component/config";
 import { Section, Field, SelectField } from "./add-server-component/fields";
 import { useAddServerForm } from "./add-server-component/useAddServerForm";
@@ -68,7 +70,7 @@ export function AddServerModal({
                                 required
                             />
                             <Field label="IP Address" value={form.ip_address} onChange={setField("ip_address")} placeholder="e.g. 10.10.10.10" required />
-                            <Field label="DNS Name" value={form.dns_name} onChange={setField("dns_name")} placeholder="optional" required />
+                            <Field label="DNS Name" value={form.dns_name} onChange={setField("dns_name")} placeholder="e.g. pttep-srv-new-01.example.com" required />
                         </Section>
 
                         <Section title="Operations">
@@ -121,7 +123,7 @@ export function AddServerModal({
                     {/* RIGHT: Application + Spec + Support */}
                     <div className="space-y-4">
                         <Section title="Application / Environment">
-                            <Field label="Application Name" value={form.application_name} onChange={setField("application_name")} placeholder="optional" required />
+                            <Field label="Application Name" value={form.application_name} onChange={setField("application_name")} placeholder="e.g. My Application" required />
                             <SelectField
                                 label="System Environment"
                                 value={form.system_environment}
@@ -130,7 +132,14 @@ export function AddServerModal({
                                 options={ENV_OPTIONS}
                                 required
                             />
-                            <Field label="Function" value={form.function} onChange={setField("function")} placeholder="optional" />
+                            <SelectField
+                                label="Function"
+                                value={form.function}
+                                onValueChange={setSelectField("function")}
+                                placeholder="Select function"
+                                options={FUNCTION_OPTIONS}
+                                required
+                            />
                         </Section>
 
                         <Section title="Specs">
@@ -195,8 +204,20 @@ export function AddServerModal({
                         </Section>
 
                         <Section title="Maintenance / DR">
-                            <Field label="Update Patch Project" value={form.update_patch_project} onChange={setField("update_patch_project")} placeholder="optional" />
-                            <Field label="Veritas Backup" value={form.veritas_backup} onChange={setField("veritas_backup")} placeholder="optional" />
+                            <SelectField
+                                label="Update/Patch Project"
+                                value={form.update_patch_project}
+                                onValueChange={setSelectField("update_patch_project")}
+                                placeholder="Select project option"
+                                options={YES_NO_OPTIONS}
+                            />
+                            <SelectField
+                                label="Veritas Backup"
+                                value={form.veritas_backup}
+                                onValueChange={setSelectField("veritas_backup")}
+                                placeholder="Select backup option"
+                                options={VERITAS_BACKUP_OPTIONS}
+                            />
                             <SelectField
                                 label="Test DR"
                                 value={form.test_dr}
