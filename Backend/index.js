@@ -7,6 +7,7 @@ import exportRoutes from "./src/routes/export.routes.js";
 import serverRoutes from "./src/routes/server.routes.js";
 
 const app = express();
+
 app.use(
   cors({
     origin: [
@@ -16,7 +17,6 @@ app.use(
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   })
 );
-
 app.use(express.json());
 
 // export routes
