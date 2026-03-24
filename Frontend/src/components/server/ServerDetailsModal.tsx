@@ -1,4 +1,5 @@
 "use client";
+import { isAdmin } from "@/lib/auth";
 import { useEffect, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import type { ServerDetail } from "@/lib/types";
@@ -38,6 +39,7 @@ export function ServerDetailsModal({ open, onClose, server, onUpdated, onDeleted
     const [form, setForm] = useState<Partial<ServerDetail>>({});
     const [saving, setSaving] = useState(false);
     const [deleting, setDeleting] = useState(false);
+    const admin = isAdmin();
 
     // which fields are Readonly even in edit mode.
     const readOnlyKeys = new Set<keyof ServerDetail>([
@@ -207,16 +209,18 @@ export function ServerDetailsModal({ open, onClose, server, onUpdated, onDeleted
                     <div className="flex gap-2">
                         {!editMode ? (
                             <>
-                                <Button variant="outline" onClick={() => setEditMode(true)}>
-                                    Edit
-                                </Button>
-                                <Button
+                                {admin && (
+                                    <Button variant="outline" onClick={() => setEditMode(true)}>
+                                        Edit
+                                    </Button>
+                                )}
+                                {admin && (<Button
                                     variant="destructive"
                                     onClick={handleDelete}
                                     disabled={deleting}
                                 >
                                     {deleting ? "Deleting..." : "Delete"}
-                                </Button>
+                                </Button>)}
                             </>
                         ) : (
                             <>

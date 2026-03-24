@@ -1,33 +1,19 @@
-// index.js
 import dotenv from "dotenv";
-dotenv.config();
+dotenv.config({ override: true });
 
 import express from "express";
 import cors from "cors";
+import authRoutes from "./src/routes/auth.routes.js";
 import exportRoutes from "./src/routes/export.routes.js";
 import serverRoutes from "./src/routes/server.routes.js";
-import authRoutes from "./src/routes/auth.routes.js";
 
 const app = express();
-app.use(
-  cors({
-    origin: [
-      "http://localhost:3000",
-      "https://webapp-masterserver.vercel.app",
-    ],
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  })
-);
 
+app.use(cors());
 app.use(express.json());
 
-// auth routes
 app.use("/api/auth", authRoutes);
-
-// export routes
 app.use("/api/servers", exportRoutes);
-
-// server routes
 app.use("/api/servers", serverRoutes);
 
 app.listen(process.env.PORT || 4000, () => {

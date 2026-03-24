@@ -2,28 +2,28 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { login } from "@/lib/auth-api";
 
 export default function LoginPage() {
     const router = useRouter();
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
     const [error, setError] = useState("");
-
-    const handleLogin = (e: React.FormEvent) => {
+    const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
+        setError("");
 
-        //Change Mock Username and Password here
-        if (username === "admin" && password === "1234") {
-            localStorage.setItem("isLoggedIn", "true");
-            router.push("/dashboard");
-            return;
+        try {
+            const data = await login(username, password);
+
+            localStorage.setItem("token", data.token);
+            localStorage.setItem("user", JSON.stringify(data.user));
+
+            router.replace("/dashboard");
+        } catch (err: unknown) {
+            setError(err instanceof Error ? err.message : "Login failed");
         }
-
-
-
-        setError("Invalid username or password");
     };
-
     return (
         <div className="min-h-screen flex items-center justify-center bg-muted/30 px-4">
             <div className="w-full max-w-md rounded-2xl border bg-background p-6 shadow-sm">

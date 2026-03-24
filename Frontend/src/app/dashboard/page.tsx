@@ -1,5 +1,4 @@
 "use client";
-import { useRouter } from "next/navigation";
 import { useEffect, useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { ServerTable } from "@/components/server/ServerTable";
@@ -19,17 +18,12 @@ import {
     DialogHeader,
     DialogTitle,
 } from "@/components/ui/dialog";
+import { isAdmin } from "@/lib/auth";
+
+
 
 
 export default function DashboardPage() {
-    //Login check on page load
-    const router = useRouter();
-    useEffect(() => {
-        const isLoggedIn = localStorage.getItem("isLoggedIn");
-        if (isLoggedIn !== "true") {
-            router.push("/login");
-        }
-    }, [router]);
     const [addOpen, setAddOpen] = useState(false);
     const [search, setSearch] = useState("");
     const [location, setLocation] = useState("ALL");
@@ -49,6 +43,7 @@ export default function DashboardPage() {
     const [decommissionDateTo, setDecommissionDateTo] = useState("");
     const [terminatedDateFrom, setTerminatedDateFrom] = useState("");
     const [terminatedDateTo, setTerminatedDateTo] = useState("");
+    const admin = isAdmin();
 
 
     const [page, setPage] = useState(1);
@@ -150,10 +145,11 @@ export default function DashboardPage() {
 
 
     //Logout function
-    const handleLogout = () => {
-        localStorage.removeItem("isLoggedIn");
-        router.push("/login");
-    };
+    function logout() {
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        window.location.href = "/login";
+    }
 
     useEffect(() => {
         try {
@@ -261,10 +257,12 @@ export default function DashboardPage() {
 
 
                 <div className="flex items-center gap-3">
-                    <Button variant="default" onClick={() => setAddOpen(true)}>
-                        <span className="mr-2">+</span>
-                        Add Server
-                    </Button>
+                    {admin && (
+                        <Button variant="default" onClick={() => setAddOpen(true)}>
+                            <span className="mr-2">+</span>
+                            Add Server
+                        </Button>
+                    )}
 
                     <Button variant="outline" onClick={() => setColumnPickerOpen(true)}>
                         Columns
@@ -274,7 +272,7 @@ export default function DashboardPage() {
                         Export CSV
                     </Button>
 
-                    <Button variant="destructive" onClick={handleLogout}>
+                    <Button variant="destructive" onClick={logout}>
                         Logout
                     </Button>
 
