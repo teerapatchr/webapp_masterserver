@@ -21,8 +21,15 @@ import {
 } from "@/components/ui/dialog";
 
 
-
 export default function DashboardPage() {
+    //Login check on page load
+    const router = useRouter();
+    useEffect(() => {
+        const isLoggedIn = localStorage.getItem("isLoggedIn");
+        if (isLoggedIn !== "true") {
+            router.push("/login");
+        }
+    }, [router]);
     const [addOpen, setAddOpen] = useState(false);
     const [search, setSearch] = useState("");
     const [location, setLocation] = useState("ALL");
@@ -42,20 +49,22 @@ export default function DashboardPage() {
     const [decommissionDateTo, setDecommissionDateTo] = useState("");
     const [terminatedDateFrom, setTerminatedDateFrom] = useState("");
     const [terminatedDateTo, setTerminatedDateTo] = useState("");
-    const router = useRouter();
+
 
     const [page, setPage] = useState(1);
-    const limit = 10;
+    const [limit, setLimit] = useState(100);
 
     //Set Page setting here
     const [meta, setMeta] = useState({
         page: 1,
-        limit: 10,
+        limit: 100,
         totalItems: 0,
         totalPages: 1,
         hasNextPage: false,
         hasPrevPage: false,
     });
+    const start = meta.totalItems === 0 ? 0 : (meta.page - 1) * limit + 1;
+    const end = Math.min(meta.page * limit, meta.totalItems);
 
 
     //Set Click Row to show details in Modal
@@ -107,6 +116,7 @@ export default function DashboardPage() {
             });
             setItems(res.items);
             setMeta(res.meta);
+
         } finally {
             setLoading(false);
         }
@@ -144,14 +154,6 @@ export default function DashboardPage() {
         localStorage.removeItem("isLoggedIn");
         router.push("/login");
     };
-
-    //Login check on page load
-    useEffect(() => {
-        const isLoggedIn = localStorage.getItem("isLoggedIn");
-        if (isLoggedIn !== "true") {
-            router.push("/login");
-        }
-    }, [router]);
 
     useEffect(() => {
         try {
@@ -254,28 +256,31 @@ export default function DashboardPage() {
         <div className="p-8 space-y-6">
             {/* Header */}
             <div className="flex items-center justify-between">
+
                 <h1 className="text-3xl font-semibold">Server Inventory</h1>
 
+
                 <div className="flex items-center gap-3">
-                    <Button onClick={() => setAddOpen(true)}>
+                    <Button variant="default" onClick={() => setAddOpen(true)}>
                         <span className="mr-2">+</span>
                         Add Server
                     </Button>
+
                     <Button variant="outline" onClick={() => setColumnPickerOpen(true)}>
                         Columns
                     </Button>
+
                     <Button variant="outline" onClick={() => setExportOpen(true)}>
                         Export CSV
                     </Button>
-                    <div className="h-10 w-10 rounded-full bg-muted" />
+
+                    <Button variant="destructive" onClick={handleLogout}>
+                        Logout
+                    </Button>
+
                 </div>
             </div>
-            <button
-                onClick={handleLogout}
-                className="rounded-md border px-3 py-2 text-sm font-medium hover:bg-muted"
-            >
-                Logout
-            </button>
+
 
             <ExportCsvModal
                 open={exportOpen}
@@ -338,14 +343,38 @@ export default function DashboardPage() {
 
             {/* Count + Table */}
             <div className="space-y-2">
-                <ServerTable data={items} onRowClick={handleRowClick} visibleColumns={visibleColumns} />
+                <ServerTable
+                    data={items}
+                    onRowClick={handleRowClick}
+                    visibleColumns={visibleColumns}
+                />
 
                 <div className="flex items-center justify-between pt-4">
+                    {/* Left: Showing text */}
                     <div className="text-sm text-muted-foreground">
-                        Page {meta.page} of {meta.totalPages} • Total {meta.totalItems} servers
+                        Showing {start}–{end} of {meta.totalItems} servers
                     </div>
 
-                    <div className="flex gap-2">
+                    {/* Middle: Rows per page */}
+                    <div className="flex items-center gap-2 text-sm">
+                        <span className="text-muted-foreground">Rows per page</span>
+                        <select
+                            value={limit}
+                            onChange={(e) => {
+                                setLimit(Number(e.target.value));
+                                setPage(1);
+                            }}
+                            className="border rounded px-2 py-1 text-sm"
+                        >
+                            <option value={10}>10</option>
+                            <option value={50}>50</option>
+                            <option value={100}>100</option>
+                            <option value={200}>200</option>
+                        </select>
+                    </div>
+
+                    {/* Right: Pagination */}
+                    <div className="flex items-center gap-3">
                         <Button
                             type="button"
                             variant="outline"
@@ -354,6 +383,10 @@ export default function DashboardPage() {
                         >
                             Prev
                         </Button>
+
+                        <span className="text-sm text-muted-foreground">
+                            Page {meta.page} / {meta.totalPages}
+                        </span>
 
                         <Button
                             type="button"
