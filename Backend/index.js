@@ -1,8 +1,9 @@
 import dotenv from "dotenv";
-dotenv.config();
+dotenv.config({ override: true });
 
 import express from "express";
 import cors from "cors";
+import authRoutes from "./src/routes/auth.routes.js";
 import exportRoutes from "./src/routes/export.routes.js";
 import serverRoutes from "./src/routes/server.routes.js";
 
@@ -19,10 +20,8 @@ app.use(
 );
 app.use(express.json());
 
-// export routes
+app.use("/api/auth", authRoutes);
 app.use("/api/servers", exportRoutes);
-
-// server routes
 app.use("/api/servers", serverRoutes);
 
 app.listen(process.env.PORT || 4000, () => {

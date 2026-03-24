@@ -2,9 +2,27 @@ import type { ServerListQuery, ServerListResponse } from "@/lib/api-types";
 import type { ServerDetail } from "@/lib/types";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? "";
-const defaultHeaders: HeadersInit = API_BASE.includes("ngrok")
-  ? { "ngrok-skip-browser-warning": "true" }
-  : {};
+function defaultHeaders(): HeadersInit {
+  const headers: HeadersInit = {};
+
+  // ngrok header
+  if (API_BASE.includes("ngrok")) {
+    headers["ngrok-skip-browser-warning"] = "true";
+  }
+
+  // JWT token
+  if (typeof window !== "undefined") {
+    const token = localStorage.getItem("token");
+    if (token) {
+      headers["Authorization"] = `Bearer ${token}`;
+    }
+  }
+
+  // JSON header
+  headers["Content-Type"] = "application/json";
+
+  return headers;
+}
 
 
 export type ExportCol = {
@@ -33,7 +51,7 @@ type ExportCsvQuery = {
 export async function fetchExportColumns(): Promise<ExportCol[]> {
   const res = await fetch(`${API_BASE}/api/servers/export-columns`, {
     cache: "no-store",
-    headers: defaultHeaders,
+    headers: defaultHeaders(),
   });
 
   if (!res.ok) {
@@ -76,7 +94,7 @@ export async function exportServersCsv(
 
   const res = await fetch(`${API_BASE}/api/servers/export?${params.toString()}`, {
     cache: "no-store",
-    headers: defaultHeaders,
+    headers: defaultHeaders(),
   });
 
   if (!res.ok) {
@@ -149,7 +167,7 @@ export async function fetchServers(query: ServerListQuery): Promise<ServerListRe
 
   const res = await fetch(`${API_BASE}/api/servers?${params.toString()}`, {
     cache: "no-store",
-    headers: defaultHeaders,
+    headers: defaultHeaders(),
   });
 
   if (!res.ok) {
@@ -162,11 +180,13 @@ export async function fetchServers(query: ServerListQuery): Promise<ServerListRe
 
   return res.json();
 }
+
+
 //Fetch server detail
 export async function fetchServerDetail(id: string): Promise<ServerDetail> {
   const res = await fetch(`${API_BASE}/api/servers/${id}`, {
     cache: "no-store",
-    headers: defaultHeaders,
+    headers: defaultHeaders(),
   });
 
   if (!res.ok) {
@@ -195,7 +215,7 @@ export async function updateServer(id: string, patch: Partial<ServerDetail>): Pr
 export async function deleteServer(id: string): Promise<{ ok: true; id: string }> {
   const res = await fetch(`${API_BASE}/api/servers/${id}`, {
     method: "DELETE",
-    headers: defaultHeaders,
+    headers: defaultHeaders(),
   });
   if (!res.ok) throw new Error(`deleteServer failed: ${res.status}`);
   return res.json();
