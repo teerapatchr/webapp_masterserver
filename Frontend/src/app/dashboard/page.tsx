@@ -19,6 +19,7 @@ import {
     DialogTitle,
 } from "@/components/ui/dialog";
 import { isAdmin } from "@/lib/auth";
+import { AddUserModal } from "@/components/user/AddUserModal";
 
 
 
@@ -43,7 +44,10 @@ export default function DashboardPage() {
     const [decommissionDateTo, setDecommissionDateTo] = useState("");
     const [terminatedDateFrom, setTerminatedDateFrom] = useState("");
     const [terminatedDateTo, setTerminatedDateTo] = useState("");
+    //User Management
     const admin = isAdmin();
+    const [userOpen, setUserOpen] = useState(false);
+
 
 
     const [page, setPage] = useState(1);
@@ -263,6 +267,11 @@ export default function DashboardPage() {
                             Add Server
                         </Button>
                     )}
+                    {admin && (
+                        <Button variant="outline" onClick={() => setUserOpen(true)}>
+                            Add User
+                        </Button>
+                    )}
 
                     <Button variant="outline" onClick={() => setColumnPickerOpen(true)}>
                         Columns
@@ -404,6 +413,11 @@ export default function DashboardPage() {
                     onCreated={() => {
                         refetch();
                     }}
+                />
+
+                <AddUserModal
+                    open={userOpen}
+                    onClose={() => setUserOpen(false)}
                 />
 
                 {/*Server Details Modal*/}
