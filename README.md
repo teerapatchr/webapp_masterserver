@@ -1,31 +1,49 @@
 # Master Server Inventory System
 
-An enterprise-style **Server Inventory Dashboard** designed to manage and monitor server infrastructure across environments.
+Internal web application for managing server inventory, lifecycle, ownership, and operational data with role-based access control.
 
-This system allows IT teams to:
+## Overview
 
-- View server inventory
-- Search and filter servers
-- Track lifecycle status
-- Export filtered datasets
-- View detailed server information
-- Manage server metadata
+The Master Server Inventory System is a full-stack web application designed to manage server information, track lifecycle status, and allow controlled access via user roles (Admin / Viewer).
 
-The application is designed to behave similarly to internal enterprise tools such as:
+The system supports:
 
-- ServiceNow asset inventory
-- VMware infrastructure dashboards
-- Internal IT asset management systems
+* Server inventory management
+* Filtering, search, and pagination
+* CSV export
+* Server detail modal with editing
+* User authentication (JWT)
+* Role-based access control (RBAC)
+* Admin user management
+* Full stack deployment
 
 ---
 
 # System Architecture
-Frontend (Next.js)
-↓
-Backend API (Node.js / Express)
-↓
-PostgreSQL Database
 
+```
+Frontend (Next.js)
+        ↓
+Backend API (Node.js Express)
+        ↓
+PostgreSQL Database
+```
+
+## Deployment Architecture
+
+```
+Frontend → Vercel
+Backend → Render
+Database → Neon PostgreSQL
+```
+
+## Local Development
+
+```
+Frontend → http://localhost:3000
+Backend  → http://localhost:4000
+Database → localhost:5432
+```
 
 ---
 
@@ -33,273 +51,351 @@ PostgreSQL Database
 
 ## Frontend
 
-- Next.js (App Router)
-- TypeScript
-- React
-- Tailwind CSS
-- shadcn/ui
-- TanStack Virtual (table virtualization)
+* Next.js (App Router)
+* React
+* TypeScript
+* Tailwind CSS
+* shadcn/ui
+* TanStack Virtual (virtualized table)
+* Fetch API
+* Lucide React (icons)
 
 ## Backend
 
-- Node.js
-- Express.js
-- REST API
+* Node.js
+* Express.js
+* PostgreSQL (pg)
+* JWT Authentication
+* bcrypt password hashing
+* CORS
+* dotenv
 
 ## Database
 
-- PostgreSQL
+* PostgreSQL
+* Neon (cloud database)
+* Local PostgreSQL (development)
+* Managed with DBeaver
 
 ---
 
-# Core Features
+# Prerequisites (Required Software)
 
-### Server Dashboard
+Install these before running the project:
 
-- server list table
-- pagination
-- virtualization for large datasets
-- column customization
-- colored environment badges
-- colored lifecycle status
-- power state indicator
+| Software   | Recommended Version |
+| ---------- | ------------------- |
+| Node.js    | 20.x or 22.x        |
+| npm        | 10+                 |
+| PostgreSQL | 14+                 |
+| Git        | Latest              |
+| DBeaver    | Latest (optional)   |
+| Docker     | Optional            |
 
-### Search
+Check installed versions:
 
-Global search across:
-
-- server_name
-- ip_address
-- application_name
-- server_owner
-
----
-
-### Filtering
-
-Supported filters:
-
-- location
-- environment
-- status
-- power state
-- critical application
-
-Search filters:
-
-- Server Name
-- IP address
-- Application Name
-- Owner
-
-Date filters:
-
-- create date
-- decommission date
-- terminated date
+```bash
+node -v
+npm -v
+psql --version
+git --version
+```
 
 ---
 
-### Export
+# Project Structure
 
-The system supports:
-
-- exporting filtered data
-- selecting export columns
-- exporting CSV format
+```
+App
+ ├── Frontend
+ │    ├── src
+ │    ├── package.json
+ │    └── ...
+ │
+ ├── Backend
+ │    ├── src
+ │    ├── package.json
+ │    └── ...
+ │
+ └── README.md
+```
 
 ---
 
-### Server Detail
+# Environment Variables
 
-Each server row can open a modal showing:
+## Backend `.env`
 
-- full server metadata
-- lifecycle information
-- calculated metrics
+Create file:
+
+```
+Backend/.env
+```
+
+## Frontend `.env.local`
+
+Create file:
+
+```
+Frontend/.env.local
+```
+
+Example:
+
+```
+NEXT_PUBLIC_API_BASE=http://localhost:4000
+```
+
+If backend is deployed, change API base to deployed URL.
 
 ---
 
-# Data Size
+# Database Setup
 
-The system is tested with: 2000+ servers records
+## Create Database
 
-Table performance remains stable due to virtualization.
+```sql
+CREATE DATABASE server_inventory;
+```
+
+## Users Table
+
+```sql
+CREATE TABLE users (
+    id SERIAL PRIMARY KEY,
+    username TEXT UNIQUE NOT NULL,
+    password_hash TEXT NOT NULL,
+    role TEXT NOT NULL CHECK (role IN ('admin', 'viewer')),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+## Server Inventory Table
+
+Use your exported schema from DBeaver for the `server_inventory` table.
+
+---
+
+# Install Dependencies
+
+## Frontend
+
+```bash
+cd Frontend
+npm install
+```
+
+## Backend
+
+```bash
+cd Backend
+npm install
+```
+
+---
+
+# Running the Application (Local Development)
+
+## Start Backend
+
+```bash
+cd Backend
+npm run dev
+```
+
+Backend runs on:
+
+```
+http://localhost:4000
+```
+
+## Start Frontend
+
+```bash
+cd Frontend
+npm run dev
+```
+
+Frontend runs on:
+
+```
+http://localhost:3000
+```
+
+---
+
+# Authentication & Roles
+
+The system uses JWT authentication.
+
+## Roles
+
+| Role   | Permissions          |
+| ------ | -------------------- |
+| Admin  | Full CRUD, Add Users |
+| Viewer | Read Only            |
+
+## Login Flow
+
+```
+Login → Backend verifies → JWT returned → Stored in localStorage → Used for API requests
+```
+
+---
+
+# Main Features
+
+## Server Management
+
+* Add server
+* Edit server
+* Delete server
+* View server details
+* Decommission tracking
+* Ownership information
+* Operational fields
+
+## Table Features
+
+* Pagination
+* Page size selector
+* Sorting
+* Search
+* Filters
+* Column visibility
+* Virtualized table (large datasets)
+* CSV export
+
+## User Management
+
+* Admin can create users
+* Roles: admin / viewer
+* Password hashed using bcrypt
+* RBAC enforced on backend
+
+## Server Details Modal
+
+* Full server information
+* Edit mode
+* Delete
+
+---
+
+# API Endpoints
+
+## Auth
+
+```
+POST /api/auth/login
+```
+
+## Servers
+
+```
+GET    /api/servers
+GET    /api/servers/:id
+POST   /api/servers
+PUT    /api/servers/:id
+DELETE /api/servers/:id
+```
+
+## Export
+
+```
+GET /api/servers/export
+GET /api/servers/export-columns
+```
+
+## Users
+
+```
+POST /api/users
+```
+
+(Admin only)
+
+---
+
+# Deployment
+
+| Component | Platform        |
+| --------- | --------------- |
+| Frontend  | Vercel          |
+| Backend   | Render          |
+| Database  | Neon PostgreSQL |
+
+Environment variables must be configured on:
+
+* Vercel
+* Render
+
+---
+
+# Development Workflow
+
+Recommended startup order:
+
+```
+1. Start PostgreSQL
+2. Start Backend
+3. Start Frontend
+4. Login
+5. Use application
+```
+
+System dependency order:
+
+```
+Database → Backend → Frontend
+```
+
+---
+
+# Setup on New Machine (Quick Guide)
+
+```
+git clone <repository>
+cd App
+
+# Backend
+cd Backend
+npm install
+create .env
+npm run dev
+
+# Frontend
+cd ../Frontend
+npm install
+create .env.local
+npm run dev
+```
+
+Open:
+
+```
+http://localhost:3000
+```
 
 ---
 
 # Future Improvements
 
-Potential upgrades include:
+Planned or recommended future features:
 
-- authentication system
-- role-based access control
-- database index optimization
-- advanced filter builder
-- audit logging
+* User management page
+* Reset password
+* Change user role
+* Audit log (who edited server)
+* Activity history
+* Docker deployment
 
 ---
 
 # Author
-
-Developer: Teerapat Charoensangsuwan
-Server Inventory System Project
-
-# Deployment Guide
-
-This guide explains how to deploy and run the Master Server Inventory System.
+Teerapat Charoensangsuwan
+Master Server Inventory System
+Internal Full-Stack Project
+Built with Next.js + Node.js + PostgreSQL
 
 ---
-
-# 1. Prerequisites
-
-Install the following:
-
-- Node.js 18+
-- npm
-- PostgreSQL
-- Git
-
-Optional tools:
-
-- DBeaver (database GUI to help adjusting Database)
-
----
-
-# 2. Clone the Repository
-git clone <repo-url>
-cd <project-folder>
-
-
----
-
-# 3. Database Setup
-
-Create a PostgreSQL database.
-
-Example:
-
-CREATE DATABASE server_inventory_db;
-
-
-Create table:
-
-CREATE TABLE server_inventory (
-    id SERIAL PRIMARY KEY,
-
-    server_name TEXT,
-    ip_address TEXT,
-    dns_name TEXT,
-    power_state TEXT,
-    create_date TEXT,
-    location TEXT,
-    zone_lv TEXT,
-    application_name TEXT,
-    system_environment TEXT,
-    function TEXT,
-    status TEXT,
-    decommission_date TEXT,
-    decom_duration_days TEXT,
-    need_terminate_process TEXT,
-    terminated_date TEXT,
-    os TEXT,
-    os_version TEXT,
-    service_pack TEXT,
-    cpu TEXT,
-    memory TEXT,
-    disk TEXT,
-    update_patch_project TEXT,
-    veritas_backup TEXT,
-    test_dr TEXT,
-    critical_app TEXT,
-    pttep_server_owner TEXT,
-    pttep_application_owner TEXT,
-    application_support_department TEXT,
-    application_support_name TEXT,
-    application_support_email TEXT,
-    server_focal_point TEXT,
-    request_channel_for_pttep TEXT,
-    ticket_id_request_for_ptt_digital TEXT,
-    remark TEXT,
-    application_support_email_1 TEXT
-);
-
-
-Additional columns can be added depending on the dataset.
-
----
-
-# 4. Import CSV Data
-
-Using DBeaver:
-
-1. Right click `server_inventory`
-2. Import Data
-3. Choose CSV
-4. Map fields
-5. Run import
-
----
-
-# 5. Backend Setup
-
-Navigate to backend folder.
-
-cd backend
-npm install
-
-
-Create `.env` file:
-
-.env Example 
---------------------------
-PORT=4000
-DATABASE_URL=postgresql://postgres:password@localhost:5432/server_inventory_db
---------------------------
-
-
-Start server: npm run dev
-
-
-Backend will run at: http://localhost:4000
-
-
----
-
-# 6. Frontend Setup
-
-Navigate to frontend folder.
---------------------------
-cd frontend
-npm install
---------------------------
-
-Create `.env.local`
---------------------------
-NEXT_PUBLIC_API_BASE=http://localhost:4000
---------------------------
-
-
-Start frontend: npm run dev
-
-Frontend runs at: http://localhost:3000
-
-
----
-
-# 7. Running the System
-
-Start services in this order:
-
-1. PostgreSQL
-2. Backend API
-3. Frontend
-
-Then open: http://localhost:3000
-
-
-
-
-
-
 
