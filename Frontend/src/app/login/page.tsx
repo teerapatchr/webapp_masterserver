@@ -3,17 +3,20 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { login } from "@/lib/auth-api";
+import { Loader2 } from "lucide-react";
 
 export default function LoginPage() {
     const router = useRouter();
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
+    const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
         setError("");
 
         try {
+            setLoading(true);
             const data = await login(username, password);
 
             localStorage.setItem("token", data.token);
@@ -22,6 +25,8 @@ export default function LoginPage() {
             router.replace("/dashboard");
         } catch (err: unknown) {
             setError(err instanceof Error ? err.message : "Login failed");
+        } finally {
+            setLoading(false);
         }
     };
     return (
@@ -36,6 +41,7 @@ export default function LoginPage() {
                     <div>
                         <label className="text-sm font-medium">Username</label>
                         <input
+                            disabled={loading}
                             className="mt-1 w-full rounded-md border px-3 py-2 text-sm"
                             value={username}
                             onChange={(e) => setUsername(e.target.value)}
@@ -46,6 +52,7 @@ export default function LoginPage() {
                     <div>
                         <label className="text-sm font-medium">Password</label>
                         <input
+                            disabled={loading}
                             type="password"
                             className="mt-1 w-full rounded-md border px-3 py-2 text-sm"
                             value={password}
@@ -58,9 +65,11 @@ export default function LoginPage() {
 
                     <button
                         type="submit"
-                        className="w-full rounded-md bg-primary text-primary-foreground py-2 text-sm font-medium"
+                        disabled={loading}
+                        className="w-full rounded-md bg-primary text-primary-foreground py-2 text-sm font-medium disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                     >
-                        Login
+                        {loading && <Loader2 className="h-4 w-4 animate-spin" />}
+                        {loading ? "Signing in..." : "Login"}
                     </button>
                 </form>
             </div>
