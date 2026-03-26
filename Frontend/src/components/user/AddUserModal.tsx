@@ -65,13 +65,6 @@ export function AddUserModal({ open, onClose }: Props) {
             return;
         }
 
-        if (role === "admin") {
-            const ok = window.confirm(
-                "Are you sure you want to create an admin account? Admin users have full access."
-            );
-            if (!ok) return;
-        }
-
         try {
             setSaving(true);
 

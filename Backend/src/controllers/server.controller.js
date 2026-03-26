@@ -70,57 +70,57 @@ export async function getServers(req, res) {
         addEq("critical_app", critical);
         addEq("pttep_server_owner", serverOwner);
 
-        if (createDateFrom) {
-            params.push(String(createDateFrom));
+        if (createDateFrom && String(createDateFrom).trim() !== "") {
+            params.push(String(createDateFrom).trim());
             where += ` AND create_date IS NOT NULL
-             AND TRIM(create_date) <> ''
-             AND TRIM(create_date) ~ '^[0-9]{1,2}/[0-9]{1,2}/[0-9]{4}$'
-             AND TO_DATE(TRIM(create_date), 'MM/DD/YYYY') >= $${i}`;
+        AND TRIM(create_date) <> ''
+        AND TRIM(create_date) ~ '^[0-9]{1,2}/[0-9]{1,2}/[0-9]{4}$'
+        AND TO_DATE(TRIM(create_date), 'MM/DD/YYYY') >= TO_DATE($${i}, 'YYYY-MM-DD')`;
             i++;
         }
 
-        if (createDateTo) {
-            params.push(String(createDateTo));
+        if (createDateTo && String(createDateTo).trim() !== "") {
+            params.push(String(createDateTo).trim());
             where += ` AND create_date IS NOT NULL
-             AND TRIM(create_date) <> ''
-             AND TRIM(create_date) ~ '^[0-9]{1,2}/[0-9]{1,2}/[0-9]{4}$'
-             AND TO_DATE(TRIM(create_date), 'MM/DD/YYYY') <= $${i}`;
+        AND TRIM(create_date) <> ''
+        AND TRIM(create_date) ~ '^[0-9]{1,2}/[0-9]{1,2}/[0-9]{4}$'
+        AND TO_DATE(TRIM(create_date), 'MM/DD/YYYY') <= TO_DATE($${i}, 'YYYY-MM-DD')`;
             i++;
         }
 
-        if (decommissionDateFrom) {
-            params.push(String(decommissionDateFrom));
+        if (decommissionDateFrom && String(decommissionDateFrom).trim() !== "") {
+            params.push(String(decommissionDateFrom).trim());
             where += ` AND decommission_date IS NOT NULL
-             AND TRIM(decommission_date) <> ''
-             AND TRIM(decommission_date) ~ '^[0-9]{1,2}/[0-9]{1,2}/[0-9]{4}$'
-             AND TO_DATE(TRIM(decommission_date), 'MM/DD/YYYY') >= $${i}`;
+        AND TRIM(decommission_date) <> ''
+        AND TRIM(decommission_date) ~ '^[0-9]{1,2}/[0-9]{1,2}/[0-9]{4}$'
+        AND TO_DATE(TRIM(decommission_date), 'MM/DD/YYYY') >= TO_DATE($${i}, 'YYYY-MM-DD')`;
             i++;
         }
 
-        if (decommissionDateTo) {
-            params.push(String(decommissionDateTo));
+        if (decommissionDateTo && String(decommissionDateTo).trim() !== "") {
+            params.push(String(decommissionDateTo).trim());
             where += ` AND decommission_date IS NOT NULL
-             AND TRIM(decommission_date) <> ''
-             AND TRIM(decommission_date) ~ '^[0-9]{1,2}/[0-9]{1,2}/[0-9]{4}$'
-             AND TO_DATE(TRIM(decommission_date), 'MM/DD/YYYY') <= $${i}`;
+        AND TRIM(decommission_date) <> ''
+        AND TRIM(decommission_date) ~ '^[0-9]{1,2}/[0-9]{1,2}/[0-9]{4}$'
+        AND TO_DATE(TRIM(decommission_date), 'MM/DD/YYYY') <= TO_DATE($${i}, 'YYYY-MM-DD')`;
             i++;
         }
 
-        if (terminatedDateFrom) {
-            params.push(String(terminatedDateFrom));
+        if (terminatedDateFrom && String(terminatedDateFrom).trim() !== "") {
+            params.push(String(terminatedDateFrom).trim());
             where += ` AND terminated_date IS NOT NULL
-             AND TRIM(terminated_date) <> ''
-             AND TRIM(terminated_date) ~ '^[0-9]{1,2}/[0-9]{1,2}/[0-9]{4}$'
-             AND TO_DATE(TRIM(terminated_date), 'MM/DD/YYYY') >= $${i}`;
+        AND TRIM(terminated_date) <> ''
+        AND TRIM(terminated_date) ~ '^[0-9]{1,2}/[0-9]{1,2}/[0-9]{4}$'
+        AND TO_DATE(TRIM(terminated_date), 'MM/DD/YYYY') >= TO_DATE($${i}, 'YYYY-MM-DD')`;
             i++;
         }
 
-        if (terminatedDateTo) {
-            params.push(String(terminatedDateTo));
+        if (terminatedDateTo && String(terminatedDateTo).trim() !== "") {
+            params.push(String(terminatedDateTo).trim());
             where += ` AND terminated_date IS NOT NULL
-             AND TRIM(terminated_date) <> ''
-             AND TRIM(terminated_date) ~ '^[0-9]{1,2}/[0-9]{1,2}/[0-9]{4}$'
-             AND TO_DATE(TRIM(terminated_date), 'MM/DD/YYYY') <= $${i}`;
+        AND TRIM(terminated_date) <> ''
+        AND TRIM(terminated_date) ~ '^[0-9]{1,2}/[0-9]{1,2}/[0-9]{4}$'
+        AND TO_DATE(TRIM(terminated_date), 'MM/DD/YYYY') <= TO_DATE($${i}, 'YYYY-MM-DD')`;
             i++;
         }
 
@@ -180,11 +180,9 @@ export async function getServers(req, res) {
 export async function updateServer(req, res) {
     try {
         const { id } = req.params;
-
-        const keys = Object.keys(body).filter((k) => SERVER_FIELDS.includes(k));
-
         const body = req.body ?? {};
 
+        const keys = Object.keys(body).filter((k) => SERVER_FIELDS.includes(k));
 
         if (keys.length === 0) {
             return res.status(400).json({ error: "No valid fields to update" });
@@ -208,6 +206,7 @@ export async function updateServer(req, res) {
 
         res.json(r.rows[0]);
     } catch (e) {
+        console.error("updateServer error:", e);
         res.status(500).json({ error: String(e) });
     }
 }
