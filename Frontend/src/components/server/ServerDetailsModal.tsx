@@ -6,6 +6,7 @@ import type { ServerDetail } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { updateServer, deleteServer } from "@/lib/server-api";
+import { mdyToISO, isoToMDY } from "../server/add-server-component/date";
 import {
     Select,
     SelectContent,
@@ -49,9 +50,19 @@ export function ServerDetailsModal({ open, onClose, server, onUpdated, onDeleted
 
 
     useEffect(() => {
-        // whenever server changes/open, reset edit state
         setEditMode(false);
-        setForm(server ?? {});
+
+        if (!server) {
+            setForm({});
+            return;
+        }
+
+        setForm({
+            ...server,
+            create_date: mdyToISO(server.create_date),
+            decommission_date: mdyToISO(server.decommission_date),
+            terminated_date: mdyToISO(server.terminated_date),
+        });
     }, [server, open]);
 
     const setField = (key: keyof ServerDetail, value: string) => {
@@ -60,14 +71,28 @@ export function ServerDetailsModal({ open, onClose, server, onUpdated, onDeleted
 
     const handleSave = async () => {
         if (!server) return;
+
         try {
             setSaving(true);
 
-            // Send full form or only changed fields. Start simple: send full form.
-            const updated = await updateServer(server.id, form);
+            const patch = {
+                ...form,
+                create_date: form.create_date ? isoToMDY(form.create_date) : "",
+                decommission_date: form.decommission_date ? isoToMDY(form.decommission_date) : "",
+                terminated_date: form.terminated_date ? isoToMDY(form.terminated_date) : "",
+            };
 
-            onUpdated(updated);
+            const updated = await updateServer(server.id, patch);
+
+            setForm({
+                ...updated,
+                create_date: mdyToISO(updated.create_date),
+                decommission_date: mdyToISO(updated.decommission_date),
+                terminated_date: mdyToISO(updated.terminated_date),
+            });
+
             setEditMode(false);
+            onUpdated(updated);
         } catch (e) {
             console.error(e);
             alert("Save failed (check console).");

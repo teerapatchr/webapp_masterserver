@@ -75,22 +75,35 @@ export async function exportServersCsv(
   filters: ExportCsvQuery,
   selectedColumns: string[]
 ): Promise<Blob> {
-  const params = new URLSearchParams({
-    q: filters.q ?? "",
-    location: filters.location ?? "ALL",
-    env: filters.env ?? "ALL",
-    status: filters.status ?? "ALL",
-    power: filters.power ?? "ALL",
-    critical: filters.critical ?? "ALL",
-    serverOwner: filters.serverOwner ?? "ALL",
-    createDateFrom: filters.createDateFrom ?? "",
-    createDateTo: filters.createDateTo ?? "",
-    decommissionDateFrom: filters.decommissionDateFrom ?? "",
-    decommissionDateTo: filters.decommissionDateTo ?? "",
-    terminatedDateFrom: filters.terminatedDateFrom ?? "",
-    terminatedDateTo: filters.terminatedDateTo ?? "",
-    columns: selectedColumns.join(","),
-  });
+  const params = new URLSearchParams();
+
+  if (filters.q?.trim()) params.set("q", filters.q.trim());
+
+  if (filters.location && filters.location !== "ALL") params.set("location", filters.location);
+  if (filters.env && filters.env !== "ALL") params.set("env", filters.env);
+  if (filters.status && filters.status !== "ALL") params.set("status", filters.status);
+  if (filters.power && filters.power !== "ALL") params.set("power", filters.power);
+  if (filters.critical && filters.critical !== "ALL") params.set("critical", filters.critical);
+  if (filters.serverOwner && filters.serverOwner !== "ALL") params.set("serverOwner", filters.serverOwner);
+
+  if (filters.createDateFrom?.trim()) params.set("createDateFrom", filters.createDateFrom.trim());
+  if (filters.createDateTo?.trim()) params.set("createDateTo", filters.createDateTo.trim());
+
+  if (filters.decommissionDateFrom?.trim()) {
+    params.set("decommissionDateFrom", filters.decommissionDateFrom.trim());
+  }
+  if (filters.decommissionDateTo?.trim()) {
+    params.set("decommissionDateTo", filters.decommissionDateTo.trim());
+  }
+
+  if (filters.terminatedDateFrom?.trim()) {
+    params.set("terminatedDateFrom", filters.terminatedDateFrom.trim());
+  }
+  if (filters.terminatedDateTo?.trim()) {
+    params.set("terminatedDateTo", filters.terminatedDateTo.trim());
+  }
+
+  params.set("columns", selectedColumns.join(","));
 
   const res = await fetch(`${API_BASE}/api/servers/export?${params.toString()}`, {
     cache: "no-store",
@@ -112,7 +125,8 @@ export async function exportServersCsv(
 export function buildServerQueryParams(query: ServerListQuery) {
   const params = new URLSearchParams();
 
-  if (query.q) params.set("q", query.q);
+  if (query.q?.trim()) params.set("q", query.q.trim());
+
   if (query.location && query.location !== "ALL") params.set("location", query.location);
   if (query.env && query.env !== "ALL") params.set("env", query.env);
   if (query.status && query.status !== "ALL") params.set("status", query.status);
@@ -120,14 +134,14 @@ export function buildServerQueryParams(query: ServerListQuery) {
   if (query.critical && query.critical !== "ALL") params.set("critical", query.critical);
   if (query.serverOwner && query.serverOwner !== "ALL") params.set("serverOwner", query.serverOwner);
 
-  if (query.createDateFrom) params.set("createDateFrom", query.createDateFrom);
-  if (query.createDateTo) params.set("createDateTo", query.createDateTo);
+  if (query.createDateFrom?.trim()) params.set("createDateFrom", query.createDateFrom.trim());
+  if (query.createDateTo?.trim()) params.set("createDateTo", query.createDateTo.trim());
 
-  if (query.decommissionDateFrom) params.set("decommissionDateFrom", query.decommissionDateFrom);
-  if (query.decommissionDateTo) params.set("decommissionDateTo", query.decommissionDateTo);
+  if (query.decommissionDateFrom?.trim()) params.set("decommissionDateFrom", query.decommissionDateFrom.trim());
+  if (query.decommissionDateTo?.trim()) params.set("decommissionDateTo", query.decommissionDateTo.trim());
 
-  if (query.terminatedDateFrom) params.set("terminatedDateFrom", query.terminatedDateFrom);
-  if (query.terminatedDateTo) params.set("terminatedDateTo", query.terminatedDateTo);
+  if (query.terminatedDateFrom?.trim()) params.set("terminatedDateFrom", query.terminatedDateFrom.trim());
+  if (query.terminatedDateTo?.trim()) params.set("terminatedDateTo", query.terminatedDateTo.trim());
 
   params.set("page", String(query.page ?? 1));
   params.set("limit", String(query.limit ?? 50));
@@ -142,29 +156,6 @@ export function buildServerQueryParams(query: ServerListQuery) {
 export async function fetchServers(query: ServerListQuery): Promise<ServerListResponse> {
   const params = buildServerQueryParams(query);
 
-  if (query.q) params.set("q", query.q);
-  if (query.location && query.location !== "ALL") params.set("location", query.location);
-  if (query.env && query.env !== "ALL") params.set("env", query.env);
-  if (query.status && query.status !== "ALL") params.set("status", query.status);
-  if (query.power && query.power !== "ALL") params.set("power", query.power);
-  if (query.critical && query.critical !== "ALL") params.set("critical", query.critical);
-  if (query.serverOwner && query.serverOwner !== "ALL") params.set("serverOwner", query.serverOwner);
-
-  if (query.createDateFrom) params.set("createDateFrom", query.createDateFrom);
-  if (query.createDateTo) params.set("createDateTo", query.createDateTo);
-
-  if (query.decommissionDateFrom) params.set("decommissionDateFrom", query.decommissionDateFrom);
-  if (query.decommissionDateTo) params.set("decommissionDateTo", query.decommissionDateTo);
-
-  if (query.terminatedDateFrom) params.set("terminatedDateFrom", query.terminatedDateFrom);
-  if (query.terminatedDateTo) params.set("terminatedDateTo", query.terminatedDateTo);
-
-  params.set("page", String(query.page ?? 1));
-  params.set("limit", String(query.limit ?? 50));
-
-  if (query.sortBy) params.set("sortBy", query.sortBy);
-  if (query.sortDir) params.set("sortDir", query.sortDir);
-
   const res = await fetch(`${API_BASE}/api/servers?${params.toString()}`, {
     cache: "no-store",
     headers: defaultHeaders(),
@@ -173,7 +164,7 @@ export async function fetchServers(query: ServerListQuery): Promise<ServerListRe
   if (!res.ok) {
     let details = "";
     try {
-      details = await res.text(); // backend sends { error: "..." }
+      details = await res.text();
     } catch { }
     throw new Error(`fetchServers failed: ${res.status} ${details}`);
   }
@@ -198,16 +189,27 @@ export async function fetchServerDetail(id: string): Promise<ServerDetail> {
 
 
 //Edit server
-export async function updateServer(id: string, patch: Partial<ServerDetail>): Promise<ServerDetail> {
+export async function updateServer(
+  id: string,
+  patch: Partial<ServerDetail>
+): Promise<ServerDetail> {
   const res = await fetch(`${API_BASE}/api/servers/${id}`, {
     method: "PUT",
     headers: {
       "Content-Type": "application/json",
-      ...defaultHeaders,
+      ...defaultHeaders(),
     },
     body: JSON.stringify(patch),
   });
-  if (!res.ok) throw new Error(`updateServer failed: ${res.status}`);
+
+  if (!res.ok) {
+    let details = "";
+    try {
+      details = await res.text();
+    } catch { }
+    throw new Error(`updateServer failed: ${res.status} ${details}`);
+  }
+
   return res.json();
 }
 
@@ -227,7 +229,7 @@ export async function createServer(payload: Partial<ServerDetail>): Promise<Serv
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      ...defaultHeaders,
+      ...defaultHeaders(),
     },
     body: JSON.stringify(payload),
   });
