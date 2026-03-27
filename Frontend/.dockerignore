@@ -2,7 +2,13 @@ node_modules
 .next
 .git
 .gitignore
-.env
-*.log
-coverage
 Dockerfile
+.dockerignore
+.env
+.env.*
+coverage
+dist
+out
+*.log
+.vscode
+.idea
