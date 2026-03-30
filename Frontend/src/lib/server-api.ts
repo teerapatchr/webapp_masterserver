@@ -1,6 +1,6 @@
 import type { ServerListQuery, ServerListResponse } from "@/lib/api-types";
 import type { ServerDetail } from "@/lib/types";
-import { API_BASE } from "@/lib/auth-api";
+import { API_BASE } from "./config";
 
 function defaultHeaders(): HeadersInit {
   const headers: HeadersInit = {};
