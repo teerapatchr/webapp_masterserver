@@ -7,6 +7,7 @@ import authRoutes from "./src/routes/auth.routes.js";
 import exportRoutes from "./src/routes/export.routes.js";
 import serverRoutes from "./src/routes/server.routes.js";
 import userRoutes from "./src/routes/user.routes.js";
+import { pool } from "./src/db.js";
 
 const app = express();
 
