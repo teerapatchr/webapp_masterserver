@@ -1,7 +1,7 @@
 import type { ServerListQuery, ServerListResponse } from "@/lib/api-types";
 import type { ServerDetail } from "@/lib/types";
+import { API_BASE } from "./config";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? "";
 function defaultHeaders(): HeadersInit {
   const headers: HeadersInit = {};
   // ngrok header
