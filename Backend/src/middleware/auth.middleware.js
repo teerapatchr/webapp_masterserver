@@ -18,7 +18,8 @@ export function verifyToken(req, res, next) {
         req.user = decoded; // { id, username, role }
         next();
     } catch (error) {
-        return res.status(403).json({ error: "Invalid token" });
+        const status = error.name === "TokenExpiredError" ? 401 : 403;
+        return res.status(status).json({ error: "Invalid or expired token" });
     }
 }
 

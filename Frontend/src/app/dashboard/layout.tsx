@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 export default function DashboardLayout({
     children,
@@ -9,16 +9,20 @@ export default function DashboardLayout({
     children: React.ReactNode;
 }) {
     const router = useRouter();
-    const token =
-        typeof window !== "undefined" ? localStorage.getItem("token") : null;
+    const [ready, setReady] = useState(false);
+    const [authed, setAuthed] = useState(false);
 
     useEffect(() => {
+        const token = localStorage.getItem("token");
         if (!token) {
             router.replace("/login");
+        } else {
+            setAuthed(true);
         }
-    }, [token, router]);
+        setReady(true);
+    }, [router]);
 
-    if (!token) return null;
+    if (!ready || !authed) return null;
 
     return <>{children}</>;
 }

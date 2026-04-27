@@ -43,3 +43,14 @@ CREATE TABLE public.server_inventory (
 	application_support_email_1 varchar(50) NULL,
 	CONSTRAINT server_inventory_pkey PRIMARY KEY (id)
 );
+
+-- Indexes for commonly filtered/sorted columns
+CREATE INDEX IF NOT EXISTS idx_server_inventory_status ON public.server_inventory (status);
+CREATE INDEX IF NOT EXISTS idx_server_inventory_location ON public.server_inventory (location);
+CREATE INDEX IF NOT EXISTS idx_server_inventory_system_environment ON public.server_inventory (system_environment);
+CREATE INDEX IF NOT EXISTS idx_server_inventory_power_state ON public.server_inventory (power_state);
+CREATE INDEX IF NOT EXISTS idx_server_inventory_critical_app ON public.server_inventory (critical_app);
+CREATE INDEX IF NOT EXISTS idx_server_inventory_pttep_server_owner ON public.server_inventory (pttep_server_owner);
+CREATE INDEX IF NOT EXISTS idx_server_inventory_server_name ON public.server_inventory (server_name);
+CREATE INDEX IF NOT EXISTS idx_server_inventory_ip_address ON public.server_inventory (ip_address);
+CREATE INDEX IF NOT EXISTS idx_server_inventory_application_name ON public.server_inventory (application_name);
