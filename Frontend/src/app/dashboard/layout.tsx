@@ -1,7 +1,12 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useSyncExternalStore } from "react";
+
+const subscribe = (cb: () => void) => {
+    window.addEventListener("storage", cb);
+    return () => window.removeEventListener("storage", cb);
+};
 
 export default function DashboardLayout({
     children,
@@ -9,20 +14,24 @@ export default function DashboardLayout({
     children: React.ReactNode;
 }) {
     const router = useRouter();
-    const [ready, setReady] = useState(false);
-    const [authed, setAuthed] = useState(false);
 
+    // Drives show/hide of children. Server snapshot is null so SSR and
+    // initial client render both return null — no hydration mismatch.
+    const token = useSyncExternalStore(
+        subscribe,
+        () => localStorage.getItem("token"),
+        () => null
+    );
+
+    // Read the real localStorage value (not the reactive snapshot) so the
+    // redirect only fires when there is genuinely no token, not on the
+    // transient null that exists before the store syncs on first render.
     useEffect(() => {
-        const token = localStorage.getItem("token");
-        if (!token) {
+        if (!localStorage.getItem("token")) {
             router.replace("/login");
-        } else {
-            setAuthed(true);
         }
-        setReady(true);
     }, [router]);
 
-    if (!ready || !authed) return null;
-
+    if (token === null) return null;
     return <>{children}</>;
 }
