@@ -1,23 +1,10 @@
 import { pool } from "../db/pool.js";
 import { SERVER_FIELDS } from "../constants/serverFields.js";
+import { buildServerFilters } from "../utils/buildServerFilters.js";
 
-// GET list with filters, pagination, sorting
 export async function getServers(req, res) {
     try {
         const {
-            q,
-            location,
-            env,
-            status,
-            power,
-            critical,
-            serverOwner,
-            createDateFrom,
-            createDateTo,
-            decommissionDateFrom,
-            decommissionDateTo,
-            terminatedDateFrom,
-            terminatedDateTo,
             page = "1",
             limit = "50",
             sortBy = "server_name",
@@ -39,90 +26,7 @@ export async function getServers(req, res) {
         const sortCol = allowedSort.has(String(sortBy)) ? String(sortBy) : "server_name";
         const sortOrder = String(sortDir).toLowerCase() === "desc" ? "DESC" : "ASC";
 
-        const params = [];
-        let i = 1;
-        let where = "WHERE 1=1";
-
-        if (q && String(q).trim() !== "") {
-            params.push(String(q).trim());
-            where += ` AND (
-        server_name ILIKE '%' || $${i} || '%'
-        OR ip_address ILIKE '%' || $${i} || '%'
-        OR application_name ILIKE '%' || $${i} || '%'
-        OR pttep_server_owner ILIKE '%' || $${i} || '%'
-        OR pttep_application_owner ILIKE '%' || $${i} || '%'
-      )`;
-            i++;
-        }
-
-        const addEq = (field, value) => {
-            if (value && String(value) !== "ALL") {
-                params.push(String(value));
-                where += ` AND ${field} = $${i}`;
-                i++;
-            }
-        };
-
-        addEq("location", location);
-        addEq("system_environment", env);
-        addEq("status", status);
-        addEq("power_state", power);
-        addEq("critical_app", critical);
-        addEq("pttep_server_owner", serverOwner);
-
-        if (createDateFrom && String(createDateFrom).trim() !== "") {
-            params.push(String(createDateFrom).trim());
-            where += ` AND create_date IS NOT NULL
-        AND TRIM(create_date) <> ''
-        AND TRIM(create_date) ~ '^[0-9]{1,2}/[0-9]{1,2}/[0-9]{4}$'
-        AND TO_DATE(TRIM(create_date), 'MM/DD/YYYY') >= TO_DATE($${i}, 'YYYY-MM-DD')`;
-            i++;
-        }
-
-        if (createDateTo && String(createDateTo).trim() !== "") {
-            params.push(String(createDateTo).trim());
-            where += ` AND create_date IS NOT NULL
-        AND TRIM(create_date) <> ''
-        AND TRIM(create_date) ~ '^[0-9]{1,2}/[0-9]{1,2}/[0-9]{4}$'
-        AND TO_DATE(TRIM(create_date), 'MM/DD/YYYY') <= TO_DATE($${i}, 'YYYY-MM-DD')`;
-            i++;
-        }
-
-        if (decommissionDateFrom && String(decommissionDateFrom).trim() !== "") {
-            params.push(String(decommissionDateFrom).trim());
-            where += ` AND decommission_date IS NOT NULL
-        AND TRIM(decommission_date) <> ''
-        AND TRIM(decommission_date) ~ '^[0-9]{1,2}/[0-9]{1,2}/[0-9]{4}$'
-        AND TO_DATE(TRIM(decommission_date), 'MM/DD/YYYY') >= TO_DATE($${i}, 'YYYY-MM-DD')`;
-            i++;
-        }
-
-        if (decommissionDateTo && String(decommissionDateTo).trim() !== "") {
-            params.push(String(decommissionDateTo).trim());
-            where += ` AND decommission_date IS NOT NULL
-        AND TRIM(decommission_date) <> ''
-        AND TRIM(decommission_date) ~ '^[0-9]{1,2}/[0-9]{1,2}/[0-9]{4}$'
-        AND TO_DATE(TRIM(decommission_date), 'MM/DD/YYYY') <= TO_DATE($${i}, 'YYYY-MM-DD')`;
-            i++;
-        }
-
-        if (terminatedDateFrom && String(terminatedDateFrom).trim() !== "") {
-            params.push(String(terminatedDateFrom).trim());
-            where += ` AND terminated_date IS NOT NULL
-        AND TRIM(terminated_date) <> ''
-        AND TRIM(terminated_date) ~ '^[0-9]{1,2}/[0-9]{1,2}/[0-9]{4}$'
-        AND TO_DATE(TRIM(terminated_date), 'MM/DD/YYYY') >= TO_DATE($${i}, 'YYYY-MM-DD')`;
-            i++;
-        }
-
-        if (terminatedDateTo && String(terminatedDateTo).trim() !== "") {
-            params.push(String(terminatedDateTo).trim());
-            where += ` AND terminated_date IS NOT NULL
-        AND TRIM(terminated_date) <> ''
-        AND TRIM(terminated_date) ~ '^[0-9]{1,2}/[0-9]{1,2}/[0-9]{4}$'
-        AND TO_DATE(TRIM(terminated_date), 'MM/DD/YYYY') <= TO_DATE($${i}, 'YYYY-MM-DD')`;
-            i++;
-        }
+        const { where, params, nextIndex } = buildServerFilters(req.query);
 
         const countSql = `
       SELECT COUNT(*)::int AS total_items
@@ -133,8 +37,7 @@ export async function getServers(req, res) {
         const totalItems = countResult.rows[0]?.total_items ?? 0;
         const totalPages = Math.max(1, Math.ceil(totalItems / limitNum));
 
-        params.push(limitNum, offset);
-
+        const listParams = [...params, limitNum, offset];
         const listSql = `
       SELECT
         id,
@@ -155,10 +58,10 @@ export async function getServers(req, res) {
       FROM server_inventory
       ${where}
       ORDER BY ${sortCol} ${sortOrder}
-      LIMIT $${i} OFFSET $${i + 1}
+      LIMIT $${nextIndex} OFFSET $${nextIndex + 1}
     `;
 
-        const listResult = await pool.query(listSql, params);
+        const listResult = await pool.query(listSql, listParams);
 
         res.json({
             items: listResult.rows,
@@ -172,11 +75,11 @@ export async function getServers(req, res) {
             },
         });
     } catch (e) {
-        res.status(500).json({ error: String(e) });
+        console.error("getServers error:", e);
+        res.status(500).json({ error: "Internal server error" });
     }
 }
 
-// Update server
 export async function updateServer(req, res) {
     try {
         const { id } = req.params;
@@ -207,11 +110,10 @@ export async function updateServer(req, res) {
         res.json(r.rows[0]);
     } catch (e) {
         console.error("updateServer error:", e);
-        res.status(500).json({ error: String(e) });
+        res.status(500).json({ error: "Internal server error" });
     }
 }
 
-// DELETE server
 export async function deleteServer(req, res) {
     try {
         const { id } = req.params;
@@ -227,11 +129,11 @@ export async function deleteServer(req, res) {
 
         res.json({ ok: true, id: r.rows[0].id });
     } catch (e) {
-        res.status(500).json({ error: String(e) });
+        console.error("deleteServer error:", e);
+        res.status(500).json({ error: "Internal server error" });
     }
 }
 
-// Create server
 export async function createServer(req, res) {
     try {
         const body = req.body ?? {};
@@ -253,21 +155,28 @@ export async function createServer(req, res) {
     `;
 
         const r = await pool.query(sql, values);
-
         res.status(201).json(r.rows[0]);
     } catch (e) {
-        res.status(500).json({ error: String(e) });
+        console.error("createServer error:", e);
+        res.status(500).json({ error: "Internal server error" });
     }
 }
 
-// GET detail (modal)
 export async function getServerDetail(req, res) {
     try {
         const { id } = req.params;
 
         const sql = `
       SELECT
-        *,
+        id, server_name, ip_address, dns_name, power_state, create_date,
+        location, zone_lv, application_name, system_environment, function,
+        status, decommission_date, need_terminate_process, terminated_date,
+        os, os_version, service_pack, cpu, memory, disk,
+        update_patch_project, veritas_backup, test_dr, critical_app,
+        pttep_server_owner, pttep_application_owner,
+        application_support_department, application_support_name,
+        application_support_email, server_focal_point,
+        request_channel_for_pttep, ticket_id_request_for_ptt_digital, remark,
         CASE
           WHEN decommission_date IS NULL OR TRIM(decommission_date) = ''
           THEN NULL
@@ -286,7 +195,7 @@ export async function getServerDetail(req, res) {
 
         return res.json(r.rows[0]);
     } catch (e) {
-        res.status(500).json({ error: String(e) });
+        console.error("getServerDetail error:", e);
+        res.status(500).json({ error: "Internal server error" });
     }
 }
-

@@ -3,20 +3,13 @@ import type { ServerDetail } from "@/lib/types";
 import { API_BASE } from "./config";
 
 function defaultHeaders(): HeadersInit {
-  const headers: HeadersInit = {};
-  // ngrok header
-  if (API_BASE.includes("ngrok")) {
-    headers["ngrok-skip-browser-warning"] = "true";
-  }
-  // JWT token
+  const headers: HeadersInit = { "Content-Type": "application/json" };
   if (typeof window !== "undefined") {
     const token = localStorage.getItem("token");
     if (token) {
       headers["Authorization"] = `Bearer ${token}`;
     }
   }
-  // JSON header
-  headers["Content-Type"] = "application/json";
   return headers;
 }
 
@@ -177,10 +170,7 @@ export async function updateServer(
 ): Promise<ServerDetail> {
   const res = await fetch(`${API_BASE}/api/servers/${id}`, {
     method: "PUT",
-    headers: {
-      "Content-Type": "application/json",
-      ...defaultHeaders(),
-    },
+    headers: defaultHeaders(),
     body: JSON.stringify(patch),
   });
 
@@ -209,10 +199,7 @@ export async function deleteServer(id: string): Promise<{ ok: true; id: string }
 export async function createServer(payload: Partial<ServerDetail>): Promise<ServerDetail> {
   const res = await fetch(`${API_BASE}/api/servers`, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      ...defaultHeaders(),
-    },
+    headers: defaultHeaders(),
     body: JSON.stringify(payload),
   });
 

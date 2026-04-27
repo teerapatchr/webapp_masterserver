@@ -11,7 +11,6 @@ export const SERVER_FIELDS = [
     "function",
     "status",
     "decommission_date",
-    "decom_duration_days",
     "need_terminate_process",
     "terminated_date",
     "os",

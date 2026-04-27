@@ -21,140 +21,174 @@ import {
 import { isAdmin } from "@/lib/auth";
 import { AddUserModal } from "@/components/user/AddUserModal";
 
+export type ColumnKey =
+    | "server_name"
+    | "ip_address"
+    | "application_name"
+    | "location"
+    | "system_environment"
+    | "status"
+    | "power_state"
+    | "critical_app"
+    | "pttep_server_owner";
 
+const ALL_COLUMNS: ColumnKey[] = [
+    "server_name",
+    "ip_address",
+    "application_name",
+    "location",
+    "system_environment",
+    "status",
+    "power_state",
+    "critical_app",
+    "pttep_server_owner",
+];
 
+const DEFAULT_VISIBLE_COLUMNS: ColumnKey[] = [...ALL_COLUMNS];
+
+const COLUMN_LABELS: Record<ColumnKey, string> = {
+    server_name: "Server Name",
+    ip_address: "IP Address",
+    application_name: "Application Name",
+    location: "Location",
+    system_environment: "Environment",
+    status: "Status",
+    power_state: "Power",
+    critical_app: "Critical",
+    pttep_server_owner: "Owner",
+};
+
+const LOCKED_COLUMNS = new Set<ColumnKey>(["server_name", "ip_address"]);
+
+type FilterState = {
+    search: string;
+    location: string;
+    env: string;
+    status: string;
+    power: string;
+    critical: string;
+    serverOwner: string;
+    createDateFrom: string;
+    createDateTo: string;
+    decommissionDateFrom: string;
+    decommissionDateTo: string;
+    terminatedDateFrom: string;
+    terminatedDateTo: string;
+};
+
+const DEFAULT_FILTERS: FilterState = {
+    search: "",
+    location: "ALL",
+    env: "ALL",
+    status: "ALL",
+    power: "ALL",
+    critical: "ALL",
+    serverOwner: "ALL",
+    createDateFrom: "",
+    createDateTo: "",
+    decommissionDateFrom: "",
+    decommissionDateTo: "",
+    terminatedDateFrom: "",
+    terminatedDateTo: "",
+};
+
+const DEFAULT_META = {
+    page: 1,
+    limit: 100,
+    totalItems: 0,
+    totalPages: 1,
+    hasNextPage: false,
+    hasPrevPage: false,
+};
+
+function moveItem(arr: ColumnKey[], from: number, to: number): ColumnKey[] {
+    const copy = [...arr];
+    const [item] = copy.splice(from, 1);
+    copy.splice(to, 0, item);
+    return copy;
+}
 
 export default function DashboardPage() {
-    const [addOpen, setAddOpen] = useState(false);
-    const [search, setSearch] = useState("");
-    const [location, setLocation] = useState("ALL");
-    const [env, setEnv] = useState("ALL");
-    const [status, setStatus] = useState("ALL");
-    const [power, setPower] = useState("ALL");
-    const [critical, setCritical] = useState("ALL");
-    const [serverOwner, setServerOwner] = useState("ALL");
-    const [selected, setSelected] = useState<ServerDetail | null>(null);
-    const [open, setOpen] = useState(false);
-    const [items, setItems] = useState<ServerInventory[]>([]);
-    const [loading, setLoading] = useState(false);
-    const [exportOpen, setExportOpen] = useState(false);
-    const [createDateFrom, setCreateDateFrom] = useState("");
-    const [createDateTo, setCreateDateTo] = useState("");
-    const [decommissionDateFrom, setDecommissionDateFrom] = useState("");
-    const [decommissionDateTo, setDecommissionDateTo] = useState("");
-    const [terminatedDateFrom, setTerminatedDateFrom] = useState("");
-    const [terminatedDateTo, setTerminatedDateTo] = useState("");
-    //User Management
-    const admin = isAdmin();
-    const [userOpen, setUserOpen] = useState(false);
+    const [admin, setAdmin] = useState(false);
 
-
-
+    const [filters, setFilters] = useState<FilterState>(DEFAULT_FILTERS);
     const [page, setPage] = useState(1);
     const [limit, setLimit] = useState(100);
 
-    //Set Page setting here
-    const [meta, setMeta] = useState({
-        page: 1,
-        limit: 100,
-        totalItems: 0,
-        totalPages: 1,
-        hasNextPage: false,
-        hasPrevPage: false,
-    });
+    const [items, setItems] = useState<ServerInventory[]>([]);
+    const [loading, setLoading] = useState(false);
+    const [fetchError, setFetchError] = useState<string | null>(null);
+    const [meta, setMeta] = useState(DEFAULT_META);
+
+    const [selected, setSelected] = useState<ServerDetail | null>(null);
+    const [detailOpen, setDetailOpen] = useState(false);
+
+    const [addOpen, setAddOpen] = useState(false);
+    const [exportOpen, setExportOpen] = useState(false);
+    const [userOpen, setUserOpen] = useState(false);
+    const [columnPickerOpen, setColumnPickerOpen] = useState(false);
+
+    const [visibleColumns, setVisibleColumns] = useState<ColumnKey[]>(DEFAULT_VISIBLE_COLUMNS);
+    const [visibleFilters, setVisibleFilters] = useState<VisibleFilters>(DEFAULT_VISIBLE_FILTERS);
+    const [dragKey, setDragKey] = useState<ColumnKey | null>(null);
+
     const start = meta.totalItems === 0 ? 0 : (meta.page - 1) * limit + 1;
     const end = Math.min(meta.page * limit, meta.totalItems);
 
-
-    //Set Click Row to show details in Modal
-    const handleRowClick = async (id: string) => {
-        try {
-            setOpen(true);        // open modal immediately
-            setSelected(null);   // reset previous data
-
-            const detail: ServerDetail = await fetchServerDetail(id);
-            setSelected(detail);
-        } catch (e) {
-            console.error("Failed to load server detail", e);
-            setOpen(false);
-        }
-    };
-
-    //Set Default Visible Columns here
-    const DEFAULT_VISIBLE_COLUMNS: ColumnKey[] = [
-        "server_name",
-        "ip_address",
-        "application_name",
-        "location",
-        "system_environment",
-        "status",
-        "power_state",
-        "critical_app",
-        "pttep_server_owner",
-    ];
-
     const refetch = useCallback(async () => {
         setLoading(true);
+        setFetchError(null);
         try {
             const res = await fetchServers({
-                q: search,
-                location,
-                env,
-                status,
-                power,
-                critical,
-                serverOwner,
-                createDateFrom,
-                createDateTo,
-                decommissionDateFrom,
-                decommissionDateTo,
-                terminatedDateFrom,
-                terminatedDateTo,
+                q: filters.search,
+                location: filters.location,
+                env: filters.env,
+                status: filters.status,
+                power: filters.power,
+                critical: filters.critical,
+                serverOwner: filters.serverOwner,
+                createDateFrom: filters.createDateFrom,
+                createDateTo: filters.createDateTo,
+                decommissionDateFrom: filters.decommissionDateFrom,
+                decommissionDateTo: filters.decommissionDateTo,
+                terminatedDateFrom: filters.terminatedDateFrom,
+                terminatedDateTo: filters.terminatedDateTo,
                 page,
                 limit,
             });
             setItems(res.items);
             setMeta(res.meta);
-
+        } catch (e) {
+            console.error("Failed to fetch servers:", e);
+            setFetchError("Failed to load servers. Please try again.");
         } finally {
             setLoading(false);
         }
-    }, [
-        search,
-        location,
-        env,
-        status,
-        power,
-        critical,
-        serverOwner,
-        createDateFrom,
-        createDateTo,
-        decommissionDateFrom,
-        decommissionDateTo,
-        terminatedDateFrom,
-        terminatedDateTo,
-        page,
-        limit,
-    ]);
+    }, [filters, page, limit]);
 
-    const [visibleFilters, setVisibleFilters] = useState<VisibleFilters>(
-        DEFAULT_VISIBLE_FILTERS
-    );
+    const handleRowClick = async (id: string) => {
+        try {
+            setDetailOpen(true);
+            setSelected(null);
+            const detail = await fetchServerDetail(id);
+            setSelected(detail);
+        } catch (e) {
+            console.error("Failed to load server detail:", e);
+            setDetailOpen(false);
+        }
+    };
 
-    const [visibleColumns, setVisibleColumns] = useState<ColumnKey[]>(
-        DEFAULT_VISIBLE_COLUMNS
-    );
-
-    const [columnPickerOpen, setColumnPickerOpen] = useState(false);
-
-
-    //Logout function
     function logout() {
         localStorage.removeItem("token");
         localStorage.removeItem("user");
         window.location.href = "/login";
     }
 
+    useEffect(() => {
+        setAdmin(isAdmin());
+    }, []);
+
+    // Restore persisted column/filter preferences
     useEffect(() => {
         try {
             const raw = localStorage.getItem("msis.visibleColumns");
@@ -171,28 +205,6 @@ export default function DashboardPage() {
     }, [visibleColumns]);
 
     useEffect(() => {
-        refetch();
-    }, [refetch]);
-
-    useEffect(() => {
-        setPage(1);
-    }, [
-        search,
-        location,
-        env,
-        status,
-        power,
-        critical,
-        serverOwner,
-        createDateFrom,
-        createDateTo,
-        decommissionDateFrom,
-        decommissionDateTo,
-        terminatedDateFrom,
-        terminatedDateTo
-    ]);
-
-    useEffect(() => {
         try {
             const raw = localStorage.getItem("msis.visibleFilters");
             if (!raw) return;
@@ -206,60 +218,35 @@ export default function DashboardPage() {
         } catch { }
     }, [visibleFilters]);
 
+    useEffect(() => {
+        refetch();
+    }, [refetch]);
+
+    // Reset to page 1 whenever filters change
+    useEffect(() => {
+        setPage(1);
+    }, [filters]);
+
     const handleVisibleFiltersChange = (next: VisibleFilters) => {
-        if (!next.location) setLocation("ALL");
-        if (!next.env) setEnv("ALL");
-        if (!next.status) setStatus("ALL");
-        if (!next.power) setPower("ALL");
-        if (!next.critical) setCritical("ALL");
-
-        if (!next.createDate) {
-            setCreateDateFrom("");
-            setCreateDateTo("");
-        }
-
-        if (!next.decommissionDate) {
-            setDecommissionDateFrom("");
-            setDecommissionDateTo("");
-        }
-
-        if (!next.terminatedDate) {
-            setTerminatedDateFrom("");
-            setTerminatedDateTo("");
-        }
-
+        setFilters((prev) => ({
+            ...prev,
+            ...(!next.location && { location: "ALL" }),
+            ...(!next.env && { env: "ALL" }),
+            ...(!next.status && { status: "ALL" }),
+            ...(!next.power && { power: "ALL" }),
+            ...(!next.critical && { critical: "ALL" }),
+            ...(!next.createDate && { createDateFrom: "", createDateTo: "" }),
+            ...(!next.decommissionDate && { decommissionDateFrom: "", decommissionDateTo: "" }),
+            ...(!next.terminatedDate && { terminatedDateFrom: "", terminatedDateTo: "" }),
+        }));
         setVisibleFilters(next);
         setPage(1);
     };
 
-    type ColumnKey =
-        | "server_name"
-        | "ip_address"
-        | "application_name"
-        | "location"
-        | "system_environment"
-        | "status"
-        | "power_state"
-        | "critical_app"
-        | "pttep_server_owner";
-
-    const [dragKey, setDragKey] = useState<ColumnKey | null>(null);
-
-    const moveItem = (arr: ColumnKey[], from: number, to: number) => {
-        const copy = [...arr];
-        const [item] = copy.splice(from, 1);
-        copy.splice(to, 0, item);
-        return copy;
-    };
-
     return (
         <div className="p-8 space-y-6">
-            {/* Header */}
             <div className="flex items-center justify-between">
-
                 <h1 className="text-3xl font-semibold">Server Inventory</h1>
-
-
                 <div className="flex items-center gap-3">
                     {admin && (
                         <Button variant="default" onClick={() => setAddOpen(true)}>
@@ -272,84 +259,74 @@ export default function DashboardPage() {
                             Add User
                         </Button>
                     )}
-
                     <Button variant="outline" onClick={() => setColumnPickerOpen(true)}>
                         Columns
                     </Button>
-
                     <Button variant="outline" onClick={() => setExportOpen(true)}>
                         Export CSV
                     </Button>
-
                     <Button variant="destructive" onClick={logout}>
                         Logout
                     </Button>
-
                 </div>
             </div>
-
 
             <ExportCsvModal
                 open={exportOpen}
                 onClose={() => setExportOpen(false)}
                 filters={{
-                    q: search,
-                    location,
-                    env,
-                    status,
-                    power,
-                    critical,
-                    serverOwner,
-                    createDateFrom,
-                    createDateTo,
-                    decommissionDateFrom,
-                    decommissionDateTo,
-                    terminatedDateFrom,
-                    terminatedDateTo,
+                    q: filters.search,
+                    location: filters.location,
+                    env: filters.env,
+                    status: filters.status,
+                    power: filters.power,
+                    critical: filters.critical,
+                    serverOwner: filters.serverOwner,
+                    createDateFrom: filters.createDateFrom,
+                    createDateTo: filters.createDateTo,
+                    decommissionDateFrom: filters.decommissionDateFrom,
+                    decommissionDateTo: filters.decommissionDateTo,
+                    terminatedDateFrom: filters.terminatedDateFrom,
+                    terminatedDateTo: filters.terminatedDateTo,
                 }}
             />
 
-            {/* Filters */}
             <ServerFilters
-                search={search}
-                onSearchChange={setSearch}
-                location={location}
-                onLocationChange={setLocation}
-                env={env}
-                onEnvChange={setEnv}
-                status={status}
-                onStatusChange={setStatus}
-                power={power}
-                onPowerChange={setPower}
-                critical={critical}
-                onCriticalChange={setCritical}
+                search={filters.search}
+                onSearchChange={(v) => setFilters((f) => ({ ...f, search: v }))}
+                location={filters.location}
+                onLocationChange={(v) => setFilters((f) => ({ ...f, location: v }))}
+                env={filters.env}
+                onEnvChange={(v) => setFilters((f) => ({ ...f, env: v }))}
+                status={filters.status}
+                onStatusChange={(v) => setFilters((f) => ({ ...f, status: v }))}
+                power={filters.power}
+                onPowerChange={(v) => setFilters((f) => ({ ...f, power: v }))}
+                critical={filters.critical}
+                onCriticalChange={(v) => setFilters((f) => ({ ...f, critical: v }))}
                 visibleFilters={visibleFilters}
                 onVisibleFiltersChange={handleVisibleFiltersChange}
-                serverOwner={serverOwner}
-                onServerOwnerChange={setServerOwner}
-
-                createDateFrom={createDateFrom}
-                onCreateDateFromChange={setCreateDateFrom}
-
-                createDateTo={createDateTo}
-                onCreateDateToChange={setCreateDateTo}
-
-                decommissionDateFrom={decommissionDateFrom}
-                onDecommissionDateFromChange={setDecommissionDateFrom}
-
-                decommissionDateTo={decommissionDateTo}
-                onDecommissionDateToChange={setDecommissionDateTo}
-
-                terminatedDateFrom={terminatedDateFrom}
-                onTerminatedDateFromChange={setTerminatedDateFrom}
-
-                terminatedDateTo={terminatedDateTo}
-                onTerminatedDateToChange={setTerminatedDateTo}
+                serverOwner={filters.serverOwner}
+                onServerOwnerChange={(v) => setFilters((f) => ({ ...f, serverOwner: v }))}
+                createDateFrom={filters.createDateFrom}
+                onCreateDateFromChange={(v) => setFilters((f) => ({ ...f, createDateFrom: v }))}
+                createDateTo={filters.createDateTo}
+                onCreateDateToChange={(v) => setFilters((f) => ({ ...f, createDateTo: v }))}
+                decommissionDateFrom={filters.decommissionDateFrom}
+                onDecommissionDateFromChange={(v) => setFilters((f) => ({ ...f, decommissionDateFrom: v }))}
+                decommissionDateTo={filters.decommissionDateTo}
+                onDecommissionDateToChange={(v) => setFilters((f) => ({ ...f, decommissionDateTo: v }))}
+                terminatedDateFrom={filters.terminatedDateFrom}
+                onTerminatedDateFromChange={(v) => setFilters((f) => ({ ...f, terminatedDateFrom: v }))}
+                terminatedDateTo={filters.terminatedDateTo}
+                onTerminatedDateToChange={(v) => setFilters((f) => ({ ...f, terminatedDateTo: v }))}
             />
 
-
-            {/* Count + Table */}
             <div className="space-y-2">
+                {fetchError && (
+                    <div className="text-sm text-red-500">{fetchError}</div>
+                )}
+
                 <ServerTable
                     data={items}
                     onRowClick={handleRowClick}
@@ -357,12 +334,10 @@ export default function DashboardPage() {
                 />
 
                 <div className="flex items-center justify-between pt-4">
-                    {/* Left: Showing text */}
                     <div className="text-sm text-muted-foreground">
                         Showing {start}–{end} of {meta.totalItems} servers
                     </div>
 
-                    {/* Middle: Rows per page */}
                     <div className="flex items-center gap-2 text-sm">
                         <span className="text-muted-foreground">Rows per page</span>
                         <select
@@ -380,7 +355,6 @@ export default function DashboardPage() {
                         </select>
                     </div>
 
-                    {/* Right: Pagination */}
                     <div className="flex items-center gap-3">
                         <Button
                             type="button"
@@ -390,11 +364,9 @@ export default function DashboardPage() {
                         >
                             Prev
                         </Button>
-
                         <span className="text-sm text-muted-foreground">
                             Page {meta.page} / {meta.totalPages}
                         </span>
-
                         <Button
                             type="button"
                             variant="outline"
@@ -406,13 +378,10 @@ export default function DashboardPage() {
                     </div>
                 </div>
 
-                {/*Add Server Modal*/}
                 <AddServerModal
                     open={addOpen}
                     onClose={() => setAddOpen(false)}
-                    onCreated={() => {
-                        refetch();
-                    }}
+                    onCreated={refetch}
                 />
 
                 <AddUserModal
@@ -420,10 +389,9 @@ export default function DashboardPage() {
                     onClose={() => setUserOpen(false)}
                 />
 
-                {/*Server Details Modal*/}
                 <ServerDetailsModal
-                    open={open}
-                    onClose={() => setOpen(false)}
+                    open={detailOpen}
+                    onClose={() => setDetailOpen(false)}
                     server={selected}
                     onUpdated={(updated) => {
                         setSelected(updated);
@@ -435,7 +403,6 @@ export default function DashboardPage() {
                     }}
                 />
 
-                {/*Column Picker Modal*/}
                 <Dialog open={columnPickerOpen} onOpenChange={setColumnPickerOpen}>
                     <DialogContent className="sm:max-w-lg">
                         <DialogHeader>
@@ -446,21 +413,9 @@ export default function DashboardPage() {
                         </DialogHeader>
 
                         <div className="space-y-3">
-                            {visibleColumns.map((key, index) => {
-                                const locked = key === "server_name" || key === "ip_address";
+                            {ALL_COLUMNS.map((key, index) => {
+                                const locked = LOCKED_COLUMNS.has(key);
                                 const checked = visibleColumns.includes(key);
-
-                                const labelMap: Record<ColumnKey, string> = {
-                                    server_name: "Server Name",
-                                    ip_address: "IP Address",
-                                    application_name: "Application Name",
-                                    location: "Location",
-                                    system_environment: "Environment",
-                                    status: "Status",
-                                    power_state: "Power",
-                                    critical_app: "Critical",
-                                    pttep_server_owner: "Owner",
-                                };
 
                                 return (
                                     <div
@@ -469,39 +424,23 @@ export default function DashboardPage() {
                                         draggable={!locked}
                                         onDragStart={() => setDragKey(key)}
                                         onDragEnd={() => setDragKey(null)}
-                                        onDragOver={(e) => {
-                                            // allow dropping
-                                            e.preventDefault();
-                                        }}
+                                        onDragOver={(e) => e.preventDefault()}
                                         onDrop={() => {
-                                            if (!dragKey) return;
-                                            if (dragKey === key) return;
-
-                                            // do not allow dropping above locked columns
-                                            const lockedCount = 2; // server_name + ip_address
+                                            if (!dragKey || dragKey === key) return;
+                                            if (LOCKED_COLUMNS.has(dragKey)) return;
                                             const from = visibleColumns.indexOf(dragKey);
-                                            const to = index;
-
-                                            // prevent moving locked items (just in case)
-                                            if (dragKey === "server_name" || dragKey === "ip_address") return;
-
-                                            // prevent placing anything before the locked block
-                                            const safeTo = Math.max(lockedCount, to);
-
+                                            const safeTo = Math.max(LOCKED_COLUMNS.size, index);
                                             setVisibleColumns((prev) => moveItem(prev, from, safeTo));
                                         }}
                                     >
                                         <div className="flex items-center gap-3">
-                                            {/* Drag handle */}
                                             <div
-                                                className={`text-muted-foreground select-none ${locked ? "opacity-40 cursor-not-allowed" : "cursor-grab"
-                                                    }`}
+                                                className={`text-muted-foreground select-none ${locked ? "opacity-40 cursor-not-allowed" : "cursor-grab"}`}
                                                 title={locked ? "Locked column" : "Drag to reorder"}
                                             >
                                                 ≡
                                             </div>
-
-                                            <div className="text-sm font-medium">{labelMap[key]}</div>
+                                            <div className="text-sm font-medium">{COLUMN_LABELS[key]}</div>
                                         </div>
 
                                         <input
@@ -510,10 +449,9 @@ export default function DashboardPage() {
                                             checked={checked}
                                             disabled={locked}
                                             onChange={(e) => {
-                                                const nextChecked = e.target.checked;
-
+                                                const next = e.target.checked;
                                                 setVisibleColumns((prev) => {
-                                                    if (nextChecked) return Array.from(new Set([...prev, key]));
+                                                    if (next) return Array.from(new Set([...prev, key]));
                                                     return prev.filter((k) => k !== key);
                                                 });
                                             }}
@@ -534,12 +472,7 @@ export default function DashboardPage() {
                         </DialogFooter>
                     </DialogContent>
                 </Dialog>
-
-
-
             </div>
         </div>
-
-
     );
 }
